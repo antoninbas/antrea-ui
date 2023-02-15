@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/gin-contrib/cors"
@@ -14,7 +15,11 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/go-logr/zapr"
 	"go.uber.org/zap"
+	"k8s.io/client-go/dynamic"
+	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/util/homedir"
 
+	traceflowhandler "antrea.io/antrea-ui/pkg/handlers/traceflow"
 	"antrea.io/antrea-ui/pkg/server"
 	"antrea.io/antrea-ui/pkg/signals"
 )
@@ -22,11 +27,23 @@ import (
 var (
 	serverAddr string
 	logger     logr.Logger
+	kubeconfig *string
 )
 
 func run() error {
 	var db *sql.DB
-	s := server.NewServer(logger, db)
+
+	k8sConfig, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
+	if err != nil {
+		return err
+	}
+	k8sClient, err := dynamic.NewForConfig(k8sConfig)
+	if err != nil {
+		return err
+	}
+
+	traceflowHandler := traceflowhandler.NewRequestsHandler(logger, k8sClient)
+	s := server.NewServer(logger, db, traceflowHandler)
 	router := gin.Default()
 	// TODO(antonin): CHANGEME
 	// This is for testing, it should be configurable
@@ -67,6 +84,11 @@ func run() error {
 
 func main() {
 	flag.StringVar(&serverAddr, "addr", ":8080", "Listening address for server")
+	if home := homedir.HomeDir(); home != "" {
+		kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
+	} else {
+		kubeconfig = flag.String("kubeconfig", "", "absolute path to the kubeconfig file")
+	}
 	flag.Parse()
 
 	zc := zap.NewProductionConfig()

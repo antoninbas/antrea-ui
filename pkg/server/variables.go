@@ -21,14 +21,14 @@ var (
 )
 
 type VariableValueLister interface {
-	List(ctx context.Context, db *sql.DB, tenantUUID, name, from, to string) ([]interface{}, string, error)
+	List(ctx context.Context, db *sql.DB, name, from, to string) ([]interface{}, string, error)
 }
 
 type PodLister struct {
 	Field string
 }
 
-func (l *PodLister) List(ctx context.Context, db *sql.DB, tenantUUID string, name string, from string, to string) ([]interface{}, string, error) {
+func (l *PodLister) List(ctx context.Context, db *sql.DB, name string, from string, to string) ([]interface{}, string, error) {
 	values := make([]interface{}, 0, 100)
 	return values, "string", nil
 }
@@ -52,7 +52,6 @@ func (s *server) GetVariable(c *gin.Context) {
 	from := c.DefaultQuery("from", "")
 	to := c.DefaultQuery("to", "")
 	if sError := func() *serverError {
-		tenantUUID := tenantUUIDFromContext(c)
 		lister, ok := listers[name]
 		if !ok {
 			return &serverError{
@@ -76,7 +75,7 @@ func (s *server) GetVariable(c *gin.Context) {
 				message: err.Error(),
 			}
 		}
-		values, variableType, err := lister.List(c, s.db, tenantUUID, name, from, to)
+		values, variableType, err := lister.List(c, s.db, name, from, to)
 		if err != nil {
 			return &serverError{
 				code: http.StatusInternalServerError,

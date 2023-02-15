@@ -64,7 +64,7 @@ func (q *internalQuery) StringVariable(name string) string {
 }
 
 type Querier interface {
-	Query(ctx context.Context, db *sql.DB, tenantUUID string, query internalQuery) (*apisv1alpha1.QueryResult, error)
+	Query(ctx context.Context, db *sql.DB, query internalQuery) (*apisv1alpha1.QueryResult, error)
 }
 
 type FlowRecordsQuerier struct{}
@@ -72,7 +72,6 @@ type FlowRecordsQuerier struct{}
 func (q *FlowRecordsQuerier) Query(
 	ctx context.Context,
 	db *sql.DB,
-	tenantUUID string,
 	query internalQuery,
 ) (*apisv1alpha1.QueryResult, error) {
 	// interval := float32(query.intervalMs) / 1000.
@@ -108,7 +107,6 @@ type PodTrafficQuerier struct {
 func (q *PodTrafficQuerier) Query(
 	ctx context.Context,
 	db *sql.DB,
-	tenantUUID string,
 	query internalQuery,
 ) (*apisv1alpha1.QueryResult, error) {
 	// interval := float32(query.intervalMs) / 1000.
@@ -140,7 +138,6 @@ type PodNetworkQuerier struct{}
 func (q *PodNetworkQuerier) Query(
 	ctx context.Context,
 	db *sql.DB,
-	tenantUUID string,
 	query internalQuery,
 ) (*apisv1alpha1.QueryResult, error) {
 	sources := make([]interface{}, 0, 1000)
@@ -206,7 +203,6 @@ func bindQueryJSON(c *gin.Context, query *apisv1alpha1.Query) error {
 func (s *server) RunQuery(c *gin.Context) {
 	query := apisv1alpha1.Query{}
 	if sError := func() *serverError {
-		tenantUUID := tenantUUIDFromContext(c)
 		if err := bindQueryJSON(c, &query); err != nil {
 			return &serverError{
 				code:    http.StatusBadRequest,
@@ -246,7 +242,6 @@ func (s *server) RunQuery(c *gin.Context) {
 		result, err := querier.Query(
 			ctx,
 			s.db,
-			tenantUUID,
 			internalQuery{
 				from:       from,
 				to:         to,

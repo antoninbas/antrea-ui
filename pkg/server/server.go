@@ -8,20 +8,25 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-logr/logr"
 	"github.com/google/uuid"
+
+	traceflowhandler "antrea.io/antrea-ui/pkg/handlers/traceflow"
 )
 
 type server struct {
-	logger logr.Logger
-	db     *sql.DB
+	logger                   logr.Logger
+	db                       *sql.DB
+	traceflowRequestsHandler traceflowhandler.RequestsHandler
 }
 
 func NewServer(
 	logger logr.Logger,
 	db *sql.DB,
+	traceflowRequestsHandler traceflowhandler.RequestsHandler,
 ) *server {
 	return &server{
-		logger: logger,
-		db:     db,
+		logger:                   logger,
+		db:                       db,
+		traceflowRequestsHandler: traceflowRequestsHandler,
 	}
 }
 
@@ -37,16 +42,16 @@ func tenantUUIDFromURL(c *gin.Context) (string, *serverError) {
 }
 
 func (s *server) AddRoutes(router *gin.Engine) {
-	apiv1 := router.Group("/api/v1/:tenantUUID")
-	apiv1.Use(func(c *gin.Context) {
-		tenantUUID, sError := tenantUUIDFromURL(c)
-		if sError != nil {
-			s.HandleError(c, sError)
-			c.Abort()
-			return
-		}
-		c.Set("tenantUUID", tenantUUID)
-	})
+	apiv1 := router.Group("/api/v1")
+	// apiv1.Use(func(c *gin.Context) {
+	// 	tenantUUID, sError := tenantUUIDFromURL(c)
+	// 	if sError != nil {
+	// 		s.HandleError(c, sError)
+	// 		c.Abort()
+	// 		return
+	// 	}
+	// 	c.Set("tenantUUID", tenantUUID)
+	// })
 	s.AddQueryRoutes(apiv1)
 	s.AddVariablesRoutes(apiv1)
 	s.AddTraceflowRoutes(apiv1)
