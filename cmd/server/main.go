@@ -43,7 +43,7 @@ func run() error {
 	}
 
 	traceflowHandler := traceflowhandler.NewRequestsHandler(logger, k8sClient)
-	s := server.NewServer(logger, db, traceflowHandler)
+	s := server.NewServer(logger, db, k8sClient, traceflowHandler)
 	router := gin.Default()
 	// TODO(antonin): CHANGEME
 	// This is for testing, it should be configurable

@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-logr/logr"
 	"github.com/google/uuid"
+	"k8s.io/client-go/dynamic"
 
 	traceflowhandler "antrea.io/antrea-ui/pkg/handlers/traceflow"
 )
@@ -15,17 +16,20 @@ import (
 type server struct {
 	logger                   logr.Logger
 	db                       *sql.DB
+	k8sClient                dynamic.Interface
 	traceflowRequestsHandler traceflowhandler.RequestsHandler
 }
 
 func NewServer(
 	logger logr.Logger,
 	db *sql.DB,
+	k8sClient dynamic.Interface,
 	traceflowRequestsHandler traceflowhandler.RequestsHandler,
 ) *server {
 	return &server{
 		logger:                   logger,
 		db:                       db,
+		k8sClient:                k8sClient,
 		traceflowRequestsHandler: traceflowRequestsHandler,
 	}
 }
@@ -55,4 +59,5 @@ func (s *server) AddRoutes(router *gin.Engine) {
 	s.AddQueryRoutes(apiv1)
 	s.AddVariablesRoutes(apiv1)
 	s.AddTraceflowRoutes(apiv1)
+	s.AddInfoRoutes(apiv1)
 }
