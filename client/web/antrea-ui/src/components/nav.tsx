@@ -10,6 +10,9 @@ import {
     dashboardIcon, dashboardIconName,
     powerIcon, powerIconName,
     userIcon, userIconName,
+    eyeIcon, eyeIconName,
+    bugIcon, bugIconName,
+    firewallIcon, firewallIconName,
  } from '@cds/core/icon';
 
 ClarityIcons.addIcons(
@@ -19,6 +22,9 @@ ClarityIcons.addIcons(
     dashboardIcon,
     powerIcon,
     userIcon,
+    eyeIcon,
+    bugIcon,
+    firewallIcon,
 )
 
 export default function NavTab() {
@@ -36,8 +42,20 @@ export default function NavTab() {
             </CdsNavigationItem>
             <CdsNavigationItem>
                 <Link to="/traceflow">
-                    <CdsIcon shape={cogIconName} solid size="sm"></CdsIcon>
+                    <CdsIcon shape={bugIconName} solid size="sm"></CdsIcon>
                     Traceflow
+                </Link>
+            </CdsNavigationItem>
+            <CdsNavigationItem>
+                <Link to="/flows">
+                    <CdsIcon shape={eyeIconName} solid size="sm"></CdsIcon>
+                    Flow Visibility
+                </Link>
+            </CdsNavigationItem>
+            <CdsNavigationItem>
+                <Link to="/policies">
+                    <CdsIcon shape={firewallIconName} solid size="sm"></CdsIcon>
+                    Network Policies
                 </Link>
             </CdsNavigationItem>
         </CdsNavigation>
