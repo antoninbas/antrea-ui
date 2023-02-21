@@ -42,24 +42,26 @@ export interface TraceflowSpec {
     timeout?: number
 }
 
+export interface TraceflowObservation {
+    component: string
+    componentInfo: string
+    action: string
+    pod: string
+    dstMAC: string
+    networkPolicy: string
+    egress: string
+    ttl: number
+    translatedSrcIP: string
+    translatedDstIP: string
+    tunnelDstIP: string
+    egressIP: string
+}
+
 export interface TraceflowNodeResult {
     node: string
     role: string
     timestamp: number
-    observations: {
-        component: string
-        componentInfo: string
-        action: string
-        pod: string
-        dstMAC: string
-        networkPolicy: string
-        egress: string
-        ttl: number
-        translatedSrcIP: string
-        translatedDstIP: string
-        tunnelDstIP: string
-        egressIP: string
-    }[]
+    observations: TraceflowObservation[]
 }
 
 export interface TraceflowStatus {

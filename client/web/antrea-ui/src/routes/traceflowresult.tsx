@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef} from 'react';
 import { useLocation } from "react-router-dom";
-import { TraceflowSpec, TraceflowStatus, TraceflowNodeResult } from '../api/traceflow';
+import { TraceflowSpec, TraceflowStatus, TraceflowNodeResult, TraceflowObservation } from '../api/traceflow';
 import * as d3 from 'd3';
 import { graphviz } from "d3-graphviz";
 
@@ -191,14 +191,36 @@ function TraceflowGraph(props: {spec: TraceflowSpec, status: TraceflowStatus}) {
         const [srcCluster, srcLastNode] = buildSubgraph('cluster_source', srcNode, senderNodeResult, false)
         graph.addSubgraph(srcCluster)
 
+        const dstNode = buildEndpointNode('dest', getDestinationLabel())
+
         if (!receiverNodeResult) {
-            const dstNode = buildEndpointNode('dest', getDestinationLabel())
             srcCluster.addNode(dstNode)
             srcCluster.addEdge(new Edge(srcLastNode.name, dstNode.name))
+            return graph
         }
-        // other case (2 nodes) not implemented yet
+
+        // sender + receiver
+        const [dstCluster, dstFirstNode] = buildSubgraph('cluster_destination', dstNode, receiverNodeResult, true)
+        graph.addSubgraph(dstCluster)
+        graph.addEdge(new Edge(srcLastNode.name, dstFirstNode.name))
 
         return graph
+    }
+
+    function getTraceflowLabel(obs: TraceflowObservation): string {
+        const label: string[] = [obs.component]
+        if (obs.componentInfo) label.push(obs.componentInfo)
+        label.push(obs.action)
+        if (obs.component === 'NetworkPolicy' && obs.networkPolicy) label.push(`Netpol: ${obs.networkPolicy}`)
+        if (obs.pod) label.push(`To: ${obs.pod}`)
+        if (obs.action !== 'Dropped') {
+            if (obs.translatedSrcIP) label.push(`Translated Source IP: ${obs.translatedSrcIP}`)
+            if (obs.translatedDstIP) label.push(`Translated Destination IP: ${obs.translatedDstIP}`)
+            if (obs.tunnelDstIP) label.push(`Tunnel Destination IP: ${obs.tunnelDstIP}`)
+            if (obs.egressIP) label.push(`Egress IP: ${obs.egressIP}`)
+            if (obs.egress) label.push(`Egress: ${obs.egress}`)
+        }
+        return label.join('\n')
     }
 
     function getSourceLabel(): string {
@@ -207,11 +229,23 @@ function TraceflowGraph(props: {spec: TraceflowSpec, status: TraceflowStatus}) {
         return source.namespace + '/' + source.pod
     }
 
+    function getDestinationPod(): string {
+        const dest = tfSpec.destination
+        if (dest.pod) return dest.pod
+        let pod: string = ""
+        tfStatus.results.forEach(nodeResult => {
+            nodeResult.observations.forEach(obs => {
+                if (obs.pod) pod = obs.pod
+            })
+        })
+        return pod
+    }
+
     function getDestinationLabel(): string {
         const dest = tfSpec.destination
         if (dest.ip) return dest.ip
         if (dest.service) return dest.namespace + '/' + dest.service
-        return dest.namespace + '/' + dest.pod
+        return dest.namespace + '/' + getDestinationPod()
     }
 
     function buildEndpointNode(name: string, label: string): Node {
@@ -223,28 +257,30 @@ function TraceflowGraph(props: {spec: TraceflowSpec, status: TraceflowStatus}) {
         return n
     }
 
-    function buildSubgraph(name: string, endpointNode: Node, nodeResult: TraceflowNodeResult, needsReversing: boolean): [Subgraph, Node] {
-        const graph = new Subgraph('cluster_source')
+    function buildSubgraph(name: string, endpointNode: Node, nodeResult: TraceflowNodeResult, isDst: boolean): [Subgraph, Node] {
+        const graph = new Subgraph(name)
         graph.setAttr('style', `"filled,bold"`)
         graph.setAttr('bgcolor', ghostWhite)
         graph.setAttr('label', `"${nodeResult.node}"`)
         const nodes = new Array<Node>()
-        nodes.push(endpointNode)
-        nodeResult.observations.forEach(obs => {
-            const n = new Node(obs.component)
-            const label = [obs.component, obs.componentInfo, obs.action]
+        if (!isDst) nodes.push(endpointNode)
+        nodeResult.observations.forEach((obs, idx) => {
+            const nodeName = `${name}_${idx}`
+            const n = new Node(nodeName)
+            const label = getTraceflowLabel(obs)
             n.setAttr('shape', `"box"`)
             n.setAttr('style', `"rounded,filled,solid"`)
-            n.setAttr('label', `"${label.join('\n')}"`)
+            n.setAttr('label', `"${label}"`)
             n.setAttr('color', grey)
             n.setAttr('fillcolor', lightGrey)
             nodes.push(n)
         })
-        if (needsReversing) nodes.reverse()
+        if (isDst) nodes.push(endpointNode)
         nodes.forEach(n => graph.addNode(n))
         for (let i = 0; i < nodes.length - 1; i++) {
             graph.addEdge(new Edge(nodes[i].name, nodes[i+1].name))
         }
+        if (isDst) return [graph, nodes[0]]
         return [graph, nodes[nodes.length-1]]
     }
 
