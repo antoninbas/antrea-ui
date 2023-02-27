@@ -3,7 +3,6 @@ import logo from './logo.svg';
 import './App.css'
 import { Outlet, Link } from "react-router-dom";
 import NavTab from './components/nav';
-import { CdsBreadcrumb } from '@cds/react/breadcrumb';
 
 function App() {
     return (

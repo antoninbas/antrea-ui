@@ -19,15 +19,20 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/homedir"
 
+	"antrea.io/antrea-ui/pkg/auth"
 	traceflowhandler "antrea.io/antrea-ui/pkg/handlers/traceflow"
+	"antrea.io/antrea-ui/pkg/password"
+	passwordhasher "antrea.io/antrea-ui/pkg/password/hasher"
+	passwordrw "antrea.io/antrea-ui/pkg/password/readwriter"
 	"antrea.io/antrea-ui/pkg/server"
 	"antrea.io/antrea-ui/pkg/signals"
 )
 
 var (
-	serverAddr string
-	logger     logr.Logger
-	kubeconfig *string
+	serverAddr     string
+	logger         logr.Logger
+	kubeconfig     *string
+	privateKeyPath string
 )
 
 func run() error {
@@ -43,7 +48,13 @@ func run() error {
 	}
 
 	traceflowHandler := traceflowhandler.NewRequestsHandler(logger, k8sClient)
-	s := server.NewServer(logger, db, k8sClient, traceflowHandler)
+	passwordStore := password.NewStore(passwordrw.NewInMemory(), passwordhasher.NewArgon2id())
+	if err := passwordStore.Init(context.Background()); err != nil {
+		return err
+	}
+	tokenManager := auth.NewTokenManager("key", auth.LoadPrivateKeyOrDie(privateKeyPath))
+
+	s := server.NewServer(logger, db, k8sClient, traceflowHandler, passwordStore, tokenManager)
 	router := gin.Default()
 	// TODO(antonin): CHANGEME
 	// This is for testing, it should be configurable
@@ -89,6 +100,7 @@ func main() {
 	} else {
 		kubeconfig = flag.String("kubeconfig", "", "absolute path to the kubeconfig file")
 	}
+	flag.StringVar(&privateKeyPath, "private-key", "", "Path to PEM private key file")
 	flag.Parse()
 
 	zc := zap.NewProductionConfig()
