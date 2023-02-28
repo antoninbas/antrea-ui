@@ -87,6 +87,7 @@ func (s *server) GetAgentInfo(c *gin.Context) {
 
 func (s *server) AddInfoRoutes(r *gin.RouterGroup) {
 	r = r.Group("/info")
+	r.Use(s.checkBearerToken)
 	r.GET("/controller", s.GetControllerInfo)
 	r.GET("/agents", s.GetAgentInfos)
 	r.GET("/agents/:name", s.GetAgentInfo)

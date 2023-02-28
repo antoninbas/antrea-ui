@@ -12,8 +12,8 @@ const (
 )
 
 type Token struct {
-	Raw       string
-	ExpiresIn time.Duration
+	Raw string
+	// ExpiresIn time.Duration
 }
 
 type TokenManager interface {
@@ -41,12 +41,12 @@ func NewTokenManager(keyID string, key *rsa.PrivateKey) *tokenManager {
 
 func (m *tokenManager) GetToken() (*Token, error) {
 	createdAt := time.Now()
-	expiresIn := 1 * time.Hour
+	// expiresIn := 1 * time.Hour
 	claims := &JWTAccessClaims{
 		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: createdAt.Add(expiresIn).Unix(),
-			Issuer:    Issuer,
-			IssuedAt:  createdAt.Unix(),
+			// ExpiresAt: createdAt.Add(expiresIn).Unix(),
+			Issuer:   Issuer,
+			IssuedAt: createdAt.Unix(),
 		},
 	}
 
@@ -60,14 +60,14 @@ func (m *tokenManager) GetToken() (*Token, error) {
 		return nil, err
 	}
 	return &Token{
-		Raw:       access,
-		ExpiresIn: expiresIn,
+		Raw: access,
+		// ExpiresIn: expiresIn,
 	}, nil
 }
 
 func (m *tokenManager) VerifyToken(rawToken string) error {
 	_, err := jwt.Parse(rawToken, func(token *jwt.Token) (interface{}, error) {
-		return m.SigningKey.PublicKey, nil
+		return &m.SigningKey.PublicKey, nil
 	})
 	if err != nil {
 		return err

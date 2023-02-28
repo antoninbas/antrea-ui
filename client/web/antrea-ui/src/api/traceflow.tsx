@@ -80,7 +80,7 @@ interface Traceflow {
 }
 
 export const traceflowAPI = {
-    runTraceflow: async (tf: TraceflowSpec): Promise<TraceflowStatus | undefined> => {
+    runTraceflow: async (tf: TraceflowSpec, token: string): Promise<TraceflowStatus | undefined> => {
         try {
             let url = `${apiUri}/traceflow`
             let response = await fetch(url, {
@@ -88,6 +88,7 @@ export const traceflowAPI = {
                 mode: "cors",
                 headers: {
                     "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`,
                 },
                 body: JSON.stringify({spec: tf}),
             });
@@ -105,6 +106,9 @@ export const traceflowAPI = {
                 response = await fetch(url, {
                     method: "GET",
                     mode: "cors",
+                    headers: {
+                        "Authorization": `Bearer ${token}`,
+                    },
                 });
                 if (response.status === 200) {
                     return response.json().then((data) => data as Traceflow).then((tf) => tf.status)

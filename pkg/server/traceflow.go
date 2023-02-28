@@ -102,6 +102,7 @@ func (s *server) GetTraceflowRequestResult(c *gin.Context) {
 
 func (s *server) AddTraceflowRoutes(r *gin.RouterGroup) {
 	r = r.Group("/traceflow")
+	r.Use(s.checkBearerToken)
 	r.POST("", s.CreateTraceflowRequest)
 	r.GET("/:requestId/status", s.GetTraceflowRequestStatus)
 	r.GET("/:requestId/result", s.GetTraceflowRequestResult)

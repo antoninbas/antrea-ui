@@ -180,7 +180,9 @@ function TraceflowGraph(props: {spec: TraceflowSpec, status: TraceflowStatus}) {
         console.log(tfStatus)
         const graph = new Digraph('tf')
 
+        // TODO: error handling, check for success, ...
         if (!tfStatus) return graph
+        if (!tfStatus.results) return graph
 
         const senderNodeResult = tfStatus.results.find(isSender)
         const receiverNodeResult = tfStatus.results.find(isReceiver)

@@ -65,13 +65,14 @@ export interface AgentInfo {
 }
 
 export const controllerInfoAPI = {
-    fetch: async (): Promise<ControllerInfo> => {
+    fetch: async (token: string): Promise<ControllerInfo> => {
         try {
             const response = await fetch(`${apiUri}/info/controller`, {
                 method: "GET",
                 mode: "cors",
                 headers: {
                     "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`,
                 },
             });
 
@@ -84,13 +85,14 @@ export const controllerInfoAPI = {
 }
 
 export const agentInfoAPI = {
-    fetchAll: async (): Promise<AgentInfo[]> => {
+    fetchAll: async (token: string): Promise<AgentInfo[]> => {
         try {
             const response = await fetch(`${apiUri}/info/agents`, {
                 method: "GET",
                 mode: "cors",
                 headers: {
                     "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`,
                 },
             });
 
@@ -101,13 +103,14 @@ export const agentInfoAPI = {
         }
     },
 
-    fetch: async (name: string): Promise<AgentInfo> => {
+    fetch: async (name: string, token: string): Promise<AgentInfo> => {
         try {
             const response = await fetch(`${apiUri}/info/agents/${name}`, {
                 method: "GET",
                 mode: "cors",
                 headers: {
                     "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`,
                 },
             });
 

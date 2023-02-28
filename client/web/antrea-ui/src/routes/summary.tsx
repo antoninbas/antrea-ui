@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { CdsCard } from '@cds/react/card';
 import { CdsDivider } from '@cds/react/divider';
 import { AgentInfo, ControllerInfo, K8sRef, agentInfoAPI, controllerInfoAPI } from '../api/info';
+import { useAccessToken } from '../api/token';
 
 type Property = string
 
@@ -81,14 +82,15 @@ function ComponentSummary<T>(props: {title: string, data: T[], propertyNames: Pr
 export default function Summary() {
     const [controllerInfo, setControllerInfo] = useState<ControllerInfo>();
     const [agentInfos, setAgentInfos] = useState<AgentInfo[]>([]);
+    const [accessToken, _] = useAccessToken();
 
     async function getControllerInfo() {
-        const controllerInfo = await controllerInfoAPI.fetch()
+        const controllerInfo = await controllerInfoAPI.fetch(accessToken)
         setControllerInfo(controllerInfo)
     }
 
     async function getAgentInfos() {
-        const agentInfos = await agentInfoAPI.fetchAll()
+        const agentInfos = await agentInfoAPI.fetchAll(accessToken)
         setAgentInfos(agentInfos)
     }
 

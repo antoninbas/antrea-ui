@@ -60,6 +60,7 @@ func run() error {
 	// This is for testing, it should be configurable
 	corsConfig := cors.DefaultConfig()
 	corsConfig.AllowAllOrigins = true
+	corsConfig.AddAllowHeaders("Authorization")
 	router.Use(cors.New(corsConfig))
 	s.AddRoutes(router)
 

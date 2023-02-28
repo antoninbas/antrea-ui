@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-logr/logr"
@@ -53,17 +54,39 @@ func tenantUUIDFromURL(c *gin.Context) (string, *serverError) {
 	return tenantUUID, nil
 }
 
+func (s *server) checkBearerToken(c *gin.Context) {
+	if sError := func() *serverError {
+		auth := c.GetHeader("Authorization")
+		if auth == "" {
+			return &serverError{
+				code:    http.StatusUnauthorized,
+				message: "Missing Authorization header",
+			}
+		}
+		t := strings.Split(auth, " ")
+		if len(t) != 2 || t[0] != "Bearer" {
+			return &serverError{
+				code:    http.StatusUnauthorized,
+				message: "Authorization header does not have valid format",
+			}
+		}
+		if err := s.tokenManager.VerifyToken(t[1]); err != nil {
+			return &serverError{
+				code:    http.StatusUnauthorized,
+				message: "Invalid Bearer token",
+				err:     err,
+			}
+		}
+		return nil
+	}(); sError != nil {
+		s.HandleError(c, sError)
+		c.Abort()
+		return
+	}
+}
+
 func (s *server) AddRoutes(router *gin.Engine) {
 	apiv1 := router.Group("/api/v1")
-	// apiv1.Use(func(c *gin.Context) {
-	// 	tenantUUID, sError := tenantUUIDFromURL(c)
-	// 	if sError != nil {
-	// 		s.HandleError(c, sError)
-	// 		c.Abort()
-	// 		return
-	// 	}
-	// 	c.Set("tenantUUID", tenantUUID)
-	// })
 	s.AddQueryRoutes(apiv1)
 	s.AddVariablesRoutes(apiv1)
 	s.AddTraceflowRoutes(apiv1)

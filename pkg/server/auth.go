@@ -3,7 +3,6 @@ package server
 import (
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/gin-gonic/gin"
 
@@ -41,7 +40,7 @@ func (s *server) GetToken(c *gin.Context) {
 		resp := apisv1alpha1.GetToken{
 			AccessToken: token.Raw,
 			TokenType:   "Bearer",
-			ExpiresIn:   int64(token.ExpiresIn / time.Second),
+			// ExpiresIn:   int64(token.ExpiresIn / time.Second),
 		}
 		c.JSON(http.StatusOK, resp)
 		return nil

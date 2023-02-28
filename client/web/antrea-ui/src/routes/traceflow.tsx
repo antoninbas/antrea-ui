@@ -11,6 +11,7 @@ import { ErrorMessage } from '@hookform/error-message';
 import { ErrorMessageContainer } from '../components/form-errors';
 import {isIP, isIPv4} from 'is-ip';
 import {TraceflowPacket, TraceflowSpec, TraceflowStatus, traceflowAPI} from '../api/traceflow';
+import { useAccessToken } from '../api/token';
 
 type Inputs = {
     srcNamespace: string
@@ -108,6 +109,8 @@ export default function Traceflow() {
         }
     });
 
+    const [accessToken, _] = useAccessToken();
+
     const navigate = useNavigate();
 
     const [traceflowRunning, setTraceflowRunning] = useState<boolean>(false);
@@ -115,7 +118,7 @@ export default function Traceflow() {
 
     async function runTraceflow(tf: TraceflowSpec, cb: () => void) {
         try {
-            const tfStatus = await traceflowAPI.runTraceflow(tf)
+            const tfStatus = await traceflowAPI.runTraceflow(tf, accessToken)
             if (tfStatus === undefined) {
                 throw "missing Traceflow status"
             }

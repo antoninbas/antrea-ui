@@ -36,5 +36,6 @@ func (s *server) UpdatePassword(c *gin.Context) {
 
 func (s *server) AddAccountRoutes(r *gin.RouterGroup) {
 	r = r.Group("/account")
+	r.Use(s.checkBearerToken)
 	r.PUT("/password", s.UpdatePassword)
 }

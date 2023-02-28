@@ -98,6 +98,7 @@ func (s *server) GetVariable(c *gin.Context) {
 
 func (s *server) AddVariablesRoutes(r *gin.RouterGroup) {
 	r = r.Group("/variables")
+	r.Use(s.checkBearerToken)
 	r.GET("", s.GetVariables)
 	r.GET("/:name", s.GetVariable)
 }

@@ -267,5 +267,6 @@ func (s *server) RunQuery(c *gin.Context) {
 
 func (s *server) AddQueryRoutes(r *gin.RouterGroup) {
 	r = r.Group("/query")
+	r.Use(s.checkBearerToken)
 	r.POST("", s.RunQuery)
 }
