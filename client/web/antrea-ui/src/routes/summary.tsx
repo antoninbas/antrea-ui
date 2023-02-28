@@ -4,6 +4,8 @@ import { CdsCard } from '@cds/react/card';
 import { CdsDivider } from '@cds/react/divider';
 import { AgentInfo, ControllerInfo, K8sRef, agentInfoAPI, controllerInfoAPI } from '../api/info';
 import { useAccessToken } from '../api/token';
+import { APIError } from '../api/common';
+import { useAPIError} from '../components/errors';
 
 type Property = string
 
@@ -83,15 +85,26 @@ export default function Summary() {
     const [controllerInfo, setControllerInfo] = useState<ControllerInfo>();
     const [agentInfos, setAgentInfos] = useState<AgentInfo[]>([]);
     const [accessToken, _] = useAccessToken();
+    const { addError } = useAPIError();
 
     async function getControllerInfo() {
-        const controllerInfo = await controllerInfoAPI.fetch(accessToken)
-        setControllerInfo(controllerInfo)
+        try {
+            const controllerInfo = await controllerInfoAPI.fetch(accessToken)
+            setControllerInfo(controllerInfo)
+        } catch(e) {
+            if (e instanceof APIError) addError(e)
+            else throw e
+        }
     }
 
     async function getAgentInfos() {
-        const agentInfos = await agentInfoAPI.fetchAll(accessToken)
-        setAgentInfos(agentInfos)
+        try {
+            const agentInfos = await agentInfoAPI.fetchAll(accessToken)
+            setAgentInfos(agentInfos)
+        } catch(e) {
+            if (e instanceof APIError) addError(e)
+            else throw e
+        }
     }
 
     useEffect(() => {

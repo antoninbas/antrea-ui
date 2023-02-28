@@ -6,6 +6,7 @@ import NavTab from './components/nav';
 import Login from './components/login';
 import { AccessTokenProvider, useAccessToken } from './api/token';
 import { CdsButton } from '@cds/react/button';
+import { APIErrorProvider, APIErrorNotification } from './components/errors';
 
 function saveToken(token: string) {
     sessionStorage.setItem('token', token);
@@ -76,7 +77,10 @@ function App() {
                     <div cds-layout="horizontal align:top wrap:none" style={{height: "100%"}}>
                         <NavTab />
                         <LoginWall>
-                            <Outlet />
+                            <APIErrorProvider>
+                                <Outlet />
+                                <APIErrorNotification />
+                            </APIErrorProvider>
                         </LoginWall>
                     </div>
                     <Logout />

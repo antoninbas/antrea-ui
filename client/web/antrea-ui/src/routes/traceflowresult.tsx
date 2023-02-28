@@ -3,6 +3,7 @@ import { useLocation } from "react-router-dom";
 import { TraceflowSpec, TraceflowStatus, TraceflowNodeResult, TraceflowObservation } from '../api/traceflow';
 import * as d3 from 'd3';
 import { graphviz } from "d3-graphviz";
+import { CdsAlertGroup, CdsAlert } from "@cds/react/alert";
 
 class Node {
     name: string
@@ -177,10 +178,8 @@ function TraceflowGraph(props: {spec: TraceflowSpec, status: TraceflowStatus}) {
     });
 
     function buildGraph(): Digraph {
-        console.log(tfStatus)
         const graph = new Digraph('tf')
 
-        // TODO: error handling, check for success, ...
         if (!tfStatus) return graph
         if (!tfStatus.results) return graph
 
@@ -287,7 +286,6 @@ function TraceflowGraph(props: {spec: TraceflowSpec, status: TraceflowStatus}) {
     }
 
     function renderGraph(graph: Digraph) {
-        console.log(graph.asDot())
         graphviz(divRef.current).renderDot(graph.asDot());
     }
 
@@ -301,15 +299,42 @@ export interface TraceflowResultState {
     status: TraceflowStatus
 }
 
+function TraceflowFailure(props: {spec: TraceflowSpec, status: TraceflowStatus}) {
+    const tfSpec = props.spec
+    const tfStatus = props.status
+
+    return (
+        <CdsAlertGroup status="danger">
+            <CdsAlert>Traceflow Failed</CdsAlert>
+            <CdsAlert>{tfStatus.reason}</CdsAlert>
+        </CdsAlertGroup>
+    );
+}
+
 export default function TraceflowResult() {
     const { state } = useLocation()
 
-    if (!state) return <p>Missing Traceflow Result</p>
+    if (!state || !state.status) {
+        return (
+            <p>Missing Traceflow Result</p>
+        );
+    }
+
+    const phase = state.status.phase
+
+    if (phase !== "Succeeded" && phase !== "Failed") {
+        // The API should guarantee that this never happens
+        return (
+            <p>Invalid Traceflow Phase</p>
+        );
+    }
 
     return (
         <div cds-layout="vertical gap:lg">
             <p cds-text="title">Result</p>
-            <TraceflowGraph spec={state.spec} status={state.status} />
+            {phase === "Succeeded"
+              ? <TraceflowGraph spec={state.spec} status={state.status} />
+              : <TraceflowFailure spec={state.spec} status={state.status} />}
         </div>
     );
 }

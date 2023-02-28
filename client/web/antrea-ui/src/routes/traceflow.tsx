@@ -12,6 +12,8 @@ import { ErrorMessageContainer } from '../components/form-errors';
 import {isIP, isIPv4} from 'is-ip';
 import {TraceflowPacket, TraceflowSpec, TraceflowStatus, traceflowAPI} from '../api/traceflow';
 import { useAccessToken } from '../api/token';
+import { APIError } from '../api/common';
+import { useAPIError} from '../components/errors';
 
 type Inputs = {
     srcNamespace: string
@@ -116,13 +118,14 @@ export default function Traceflow() {
     const [traceflowRunning, setTraceflowRunning] = useState<boolean>(false);
     const mountedRef = useRef<boolean>(false)
 
+    const { addError } = useAPIError();
+
     async function runTraceflow(tf: TraceflowSpec, cb: () => void) {
         try {
             const tfStatus = await traceflowAPI.runTraceflow(tf, accessToken)
             if (tfStatus === undefined) {
                 throw "missing Traceflow status"
             }
-            console.log(tfStatus)
             navigate(`/traceflow/result`, {
                 state: {
                     spec: tf,
@@ -130,7 +133,8 @@ export default function Traceflow() {
                 }
             })
         } catch(e) {
-
+            if (e instanceof APIError) addError(e)
+            else throw e
         }
         if (mountedRef.current) {
             cb();
@@ -138,7 +142,6 @@ export default function Traceflow() {
     }
 
     const onSubmit: SubmitHandler<Inputs> = data => {
-        console.log(data);
         const tf = createTraceflowRequest(data)
         setTraceflowRunning(true)
         runTraceflow(tf, () => {
