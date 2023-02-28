@@ -2,6 +2,7 @@ package readwriter
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"sync"
 
@@ -90,15 +91,27 @@ func (rw *K8sSecret) Read(ctx context.Context) (bool, []byte, []byte, error) {
 			// should not be possible
 			return nil, nil, fmt.Errorf("no data in secret")
 		}
-		hash, ok := data["hash"]
+		hashI, ok := data["hash"]
 		if !ok {
 			return nil, nil, fmt.Errorf("hash is missing from data")
 		}
-		salt, ok := data["salt"]
+		saltI, ok := data["salt"]
 		if !ok {
 			return nil, nil, fmt.Errorf("salt is missing from data")
 		}
-		return hash.([]byte), salt.([]byte), nil
+		// unfortunately, using the dynamic client means that we get this data as strings,
+		// and that we have to decode the base64 data ourselves.
+		hashS := hashI.(string)
+		saltS := saltI.(string)
+		hash, err := base64.StdEncoding.DecodeString(hashS)
+		if err != nil {
+			return nil, nil, fmt.Errorf("error when base64-decoding hash: %w", err)
+		}
+		salt, err := base64.StdEncoding.DecodeString(saltS)
+		if err != nil {
+			return nil, nil, fmt.Errorf("error when base64-decoding salt: %w", err)
+		}
+		return hash, salt, nil
 	}
 
 	hash, salt, err := readData()
