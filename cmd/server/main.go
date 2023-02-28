@@ -48,7 +48,8 @@ func run() error {
 	}
 
 	traceflowHandler := traceflowhandler.NewRequestsHandler(logger, k8sClient)
-	passwordStore := password.NewStore(passwordrw.NewInMemory(), passwordhasher.NewArgon2id())
+	// passwordStore := password.NewStore(passwordrw.NewInMemory(), passwordhasher.NewArgon2id())
+	passwordStore := password.NewStore(passwordrw.NewK8sSecret("default", "antrea-ui-passwd", k8sClient), passwordhasher.NewArgon2id())
 	if err := passwordStore.Init(context.Background()); err != nil {
 		return err
 	}
