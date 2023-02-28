@@ -122,7 +122,7 @@ export default function Traceflow() {
 
     async function runTraceflow(tf: TraceflowSpec, cb: () => void) {
         try {
-            const tfStatus = await traceflowAPI.runTraceflow(tf, accessToken)
+            const tfStatus = await traceflowAPI.runTraceflow(tf, true, accessToken)
             if (tfStatus === undefined) {
                 throw "missing Traceflow status"
             }

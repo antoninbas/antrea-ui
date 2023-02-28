@@ -100,10 +100,36 @@ func (s *server) GetTraceflowRequestResult(c *gin.Context) {
 	c.Data(http.StatusOK, "application/json; charset=utf-8", data)
 }
 
+func (s *server) DeleteTraceflowRequestResult(c *gin.Context) {
+	requestID := c.Param("requestId")
+	if sError := func() *serverError {
+		ok, err := s.traceflowRequestsHandler.DeleteRequest(c, requestID)
+		if err != nil {
+			return &serverError{
+				code: http.StatusInternalServerError,
+				err:  fmt.Errorf("error when deleting Traceflow request: %w", err),
+			}
+		}
+		if !ok {
+			return &serverError{
+				code:    http.StatusNotFound,
+				message: "Traceflow request not found",
+			}
+		}
+		return nil
+	}(); sError != nil {
+		s.HandleError(c, sError)
+		s.LogError(sError, "Failed to delete Traceflow request", "requestId", requestID)
+		return
+	}
+	c.Status(http.StatusOK)
+}
+
 func (s *server) AddTraceflowRoutes(r *gin.RouterGroup) {
 	r = r.Group("/traceflow")
 	r.Use(s.checkBearerToken)
 	r.POST("", s.CreateTraceflowRequest)
 	r.GET("/:requestId/status", s.GetTraceflowRequestStatus)
 	r.GET("/:requestId/result", s.GetTraceflowRequestResult)
+	r.DELETE("/:requestId/result", s.DeleteTraceflowRequestResult)
 }

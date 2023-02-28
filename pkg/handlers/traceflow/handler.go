@@ -7,8 +7,10 @@ import (
 
 	"github.com/go-logr/logr"
 	"github.com/google/uuid"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/dynamic"
@@ -70,6 +72,17 @@ func (h *requestsHandler) GetRequestResult(ctx context.Context, requestID string
 	return object, nil
 }
 
+func (h *requestsHandler) DeleteRequest(ctx context.Context, requestID string) (bool, error) {
+	tfName := requestID
+	err := h.k8sClient.Resource(traceflowGVR).Delete(ctx, tfName, metav1.DeleteOptions{})
+	if apierrors.IsNotFound(err) {
+		return false, nil
+	}
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
 func (h *requestsHandler) getTraceflow(ctx context.Context, tfName string) (map[string]interface{}, bool, error) {
 	traceflow, err := h.k8sClient.Resource(traceflowGVR).Get(ctx, tfName, metav1.GetOptions{})
 	if err != nil {
@@ -92,6 +105,9 @@ func (h *requestsHandler) createTraceflow(ctx context.Context, tfName string, ob
 			"kind":       "Traceflow",
 			"metadata": map[string]interface{}{
 				"name": tfName,
+				"labels": map[string]string{
+					"ui.antrea.io": "",
+				},
 			},
 			"spec": object["spec"],
 		},
@@ -103,7 +119,12 @@ func (h *requestsHandler) createTraceflow(ctx context.Context, tfName string, ob
 }
 
 func (h *requestsHandler) doGC(ctx context.Context) {
-	list, err := h.k8sClient.Resource(traceflowGVR).List(ctx, metav1.ListOptions{})
+	labelSelector := metav1.LabelSelector{
+		MatchLabels: map[string]string{"ui.antrea.io": ""},
+	}
+	list, err := h.k8sClient.Resource(traceflowGVR).List(ctx, metav1.ListOptions{
+		LabelSelector: labels.Set(labelSelector.MatchLabels).String(),
+	})
 	if err != nil {
 		h.logger.Error(err, "Error when listing traceflows")
 		return

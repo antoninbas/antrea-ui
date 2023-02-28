@@ -80,7 +80,7 @@ interface Traceflow {
 }
 
 export const traceflowAPI = {
-    runTraceflow: async (tf: TraceflowSpec, token: string): Promise<TraceflowStatus | undefined> => {
+    runTraceflow: async (tf: TraceflowSpec, withDelete: boolean, token: string): Promise<TraceflowStatus | undefined> => {
         try {
             let url = `${apiUri}/traceflow`
             let response = await fetch(url, {
@@ -111,6 +111,20 @@ export const traceflowAPI = {
                     },
                 });
                 if (response.status === 200) {
+                    if (withDelete) {
+                        let deleteResponse = await fetch(response.url, {
+                            method: "DELETE",
+                            mode: "cors",
+                            headers: {
+                                "Authorization": `Bearer ${token}`,
+                            },
+                        });
+                        if (deleteResponse.status !== 200) {
+                            console.error("Unable to delete traceflow")
+                        } else {
+                            console.log("Traceflow deleted successfully")
+                        }
+                    }
                     return response.json().then((data) => data as Traceflow).then((tf) => tf.status)
                 }
                 if (response.status !== 202) {
