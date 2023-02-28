@@ -7,6 +7,7 @@ import Traceflow from './routes/traceflow'
 import TraceflowResult from './routes/traceflowresult'
 import FlowVisibility from './routes/flows'
 import NetworkPolicies from './routes/policies'
+import Settings from './routes/settings'
 import reportWebVitals from './reportWebVitals';
 import {
   createBrowserRouter,
@@ -44,6 +45,10 @@ const router = createBrowserRouter([
             {
                 path: "policies",
                 element: <NetworkPolicies />,
+            },
+            {
+                path: "settings",
+                element: <Settings />,
             },
         ],
     },

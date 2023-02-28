@@ -58,6 +58,12 @@ export default function NavTab() {
                     Network Policies
                 </Link>
             </CdsNavigationItem>
+            <CdsNavigationItem>
+                <Link to="/settings">
+                    <CdsIcon shape={cogIconName} solid size="sm"></CdsIcon>
+                    Settings
+                </Link>
+            </CdsNavigationItem>
         </CdsNavigation>
     );
 }

@@ -56,7 +56,7 @@ function Logout() {
 
     return (
         <div cds-layout="vertical p:md gap:md">
-            <CdsButton type="button" action="outline" onClick={()=> { removeToken(); navigate(0); }}>Logout</CdsButton>
+            <CdsButton type="button" action="outline" onClick={()=> { removeToken(); navigate("/"); navigate(0); }}>Logout</CdsButton>
         </div>
     )
 }
