@@ -15,6 +15,7 @@ export class APIError extends Error {
         this.code = code;
         this.status = status;
         this.date = new Date();
+        this.message = `${this.message} (${this.code}, ${this.status})`
     }
 }
 

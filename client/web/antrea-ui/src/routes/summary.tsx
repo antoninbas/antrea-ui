@@ -6,6 +6,7 @@ import { AgentInfo, ControllerInfo, K8sRef, agentInfoAPI, controllerInfoAPI } fr
 import { useAccessToken } from '../api/token';
 import { APIError } from '../api/common';
 import { useAPIError} from '../components/errors';
+import { WaitForAPIResource } from '../components/progress';
 
 type Property = string
 
@@ -83,47 +84,56 @@ function ComponentSummary<T>(props: {title: string, data: T[], propertyNames: Pr
 
 export default function Summary() {
     const [controllerInfo, setControllerInfo] = useState<ControllerInfo>();
-    const [agentInfos, setAgentInfos] = useState<AgentInfo[]>([]);
+    const [agentInfos, setAgentInfos] = useState<AgentInfo[]>();
     const [accessToken, _] = useAccessToken();
-    const { addError } = useAPIError();
-
-    async function getControllerInfo() {
-        try {
-            const controllerInfo = await controllerInfoAPI.fetch(accessToken)
-            setControllerInfo(controllerInfo)
-        } catch(e) {
-            if (e instanceof APIError) addError(e)
-            else throw e
-        }
-    }
-
-    async function getAgentInfos() {
-        try {
-            const agentInfos = await agentInfoAPI.fetchAll(accessToken)
-            setAgentInfos(agentInfos)
-        } catch(e) {
-            if (e instanceof APIError) addError(e)
-            else throw e
-        }
-    }
+    const { addError, removeError } = useAPIError();
 
     useEffect(() => {
-        getControllerInfo()
-        getAgentInfos()
-    }, [])
+        async function getControllerInfo() {
+            try {
+                const controllerInfo = await controllerInfoAPI.fetch(accessToken);
+                return controllerInfo;
+            } catch(e) {
+                if (e instanceof Error ) addError(e)
+                console.error(e)
+            }
+        }
 
-    if (!controllerInfo || !agentInfos) {
-        return (
-            <p>Loading</p>
-        );
-    }
+        async function getAgentInfos() {
+            try {
+                const agentInfos = await agentInfoAPI.fetchAll(accessToken)
+                return agentInfos;
+            } catch(e) {
+                if (e instanceof Error ) addError(e)
+                console.error(e)
+            }
+        }
+
+        // Defining this functions inside of useEffect is recommended
+        // https://reactjs.org/docs/hooks-faq.html#is-it-safe-to-omit-functions-from-the-list-of-dependencies
+        async function getData() {
+            let [controllerInfo, agentInfos] = await Promise.all([getControllerInfo(), getAgentInfos()])
+            setControllerInfo(controllerInfo)
+            setAgentInfos(agentInfos)
+
+            if (controllerInfo !== undefined && agentInfos !== undefined) {
+                removeError();
+            }
+        }
+
+        getData();
+    }, [accessToken, addError, removeError])
 
     return (
         <main>
             <div cds-layout="vertical gap:lg">
                 <p cds-text="title">Summary</p>
-                <ComponentSummary title="Controller" data={new Array(controllerInfo)} propertyNames={controllerProperties} getProperties={controllerPropertyValues} />
-                <ComponentSummary title="Agents" data={agentInfos} propertyNames={agentProperties} getProperties={agentPropertyValues} />
+                <WaitForAPIResource ready={controllerInfo !== undefined} text="Loading Controller Information">
+                    <ComponentSummary title="Controller" data={new Array(controllerInfo!)} propertyNames={controllerProperties} getProperties={controllerPropertyValues} />
+                </WaitForAPIResource>
+                <WaitForAPIResource ready={agentInfos !==undefined} text="Loading Agents Information">
+                    <ComponentSummary title="Agents" data={agentInfos!} propertyNames={agentProperties} getProperties={agentPropertyValues} />
+                </WaitForAPIResource>
             </div>
         </main>
     );

@@ -1,29 +1,28 @@
 import React, { useState, useEffect, useCallback, useContext } from 'react';
 import { CdsAlertGroup, CdsAlert } from "@cds/react/alert";
-import { APIError } from '../api/common';
 
 interface APIErrorContextType {
-    error: APIError | null
-    addError: (error: APIError) => void
+    error: Error | null
+    addError: (error: Error) => void
     removeError: () => void
 }
 
 export const APIErrorContext = React.createContext<APIErrorContextType>({
     error: null,
-    addError: (error: APIError) => {},
+    addError: (error: Error) => {},
     removeError: () => {}
 });
 
 export function APIErrorProvider(props: React.PropsWithChildren) {
-    const [error, setError] = useState<APIError | null>(null);
+    const [error, setError] = useState<Error | null>(null);
 
     const removeError = () => setError(null);
 
-    const addError = (error: APIError) => setError(error);
+    const addError = (error: Error) => setError(error);
 
     const contextValue = {
         error,
-        addError: useCallback((error: APIError) => addError(error), []),
+        addError: useCallback((error: Error) => addError(error), []),
         removeError: useCallback(() => removeError(), [])
     };
 
@@ -52,7 +51,7 @@ export function APIErrorNotification() {
 
     return (
         <CdsAlertGroup type="banner" status="danger">
-            <CdsAlert closable onCloseChange={()=>handleClose()}>{error.message}, {error.code}, {error.status}</CdsAlert>
+            <CdsAlert closable onCloseChange={()=>handleClose()}>{error.message}</CdsAlert>
         </CdsAlertGroup>
     );
 }
