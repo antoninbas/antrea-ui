@@ -1,6 +1,8 @@
-import { APIError, handleErrorResponse } from './common'
+import api from './axios'
+import { APIError, handleError } from './common'
 import config from '../config';
-const { apiServer, apiUri } = config;
+
+const { apiServer } = config;
 
 interface ObjectMetadata {
     creationTimestamp?: string
@@ -82,59 +84,43 @@ interface Traceflow {
 export const traceflowAPI = {
     runTraceflow: async (tf: TraceflowSpec, withDelete: boolean, token: string): Promise<TraceflowStatus | undefined> => {
         try {
-            let url = `${apiUri}/traceflow`
-            let response = await fetch(url, {
-                method: "POST",
-                mode: "cors",
+            let response = await api.post(`traceflow`, {spec: tf}, {
                 headers: {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${token}`,
                 },
-                body: JSON.stringify({spec: tf}),
-            });
-
-            if (response.status !== 202) {
-                throw new APIError(response.status, response.statusText, "Error when creating traceflow request");
-            }
+                validateStatus: (status: number) => status === 202,
+            })
 
             for (let i = 0; i < 10; i++) {
-                let location = response.headers.get("Location") ?? "";
-                let retryAfter = response.headers.get("Retry-After") ?? "";
+                let location = response.headers["location"] ?? "";
+                let retryAfter = response.headers["retry-after"] ?? "";
                 let waitFor = parseInt(retryAfter) * 1000;
                 await new Promise(r => setTimeout(r, waitFor));
-                url = `${apiServer}${location}`
-                response = await fetch(url, {
-                    method: "GET",
-                    mode: "cors",
+                response = await api.get(`${location}`, {
+                    baseURL: `${apiServer}`,
                     headers: {
                         "Authorization": `Bearer ${token}`,
                     },
+                validateStatus: (status: number) => status === 200 || status === 202,
                 });
                 if (response.status === 200) {
                     if (withDelete) {
-                        let deleteResponse = await fetch(response.url, {
-                            method: "DELETE",
-                            mode: "cors",
+                        await api.delete(`${response.request.responseURL}`, {
                             headers: {
                                 "Authorization": `Bearer ${token}`,
                             },
-                        });
-                        if (deleteResponse.status !== 200) {
-                            console.error("Unable to delete traceflow")
-                        } else {
-                            console.log("Traceflow deleted successfully")
-                        }
+                            validateStatus: (status: number) => status === 200,
+                        }).then(_ => console.log("Traceflow deleted successfully")).catch(_ => console.error("Unable to delete traceflow"))
                     }
-                    return response.json().then((data) => data as Traceflow).then((tf) => tf.status)
-                }
-                if (response.status !== 202) {
-                    throw new APIError(response.status, response.statusText, "Error when checking traceflow request status");
+                    const tf = response.data as Traceflow
+                    return tf.status
                 }
             }
-            throw new APIError(0, "", "Timeout when waiting for traceflow request to compleye")
-        } catch (err) {
+            throw new APIError(0, "", "Timeout when waiting for traceflow request to complete")
+        } catch(err) {
             console.error("Unable to run traceflow");
-            throw err;
+            handleError(err as Error)
         }
     }
 }

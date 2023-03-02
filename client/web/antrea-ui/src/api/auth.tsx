@@ -1,7 +1,6 @@
-import { APIError, handleErrorResponse } from './common'
-import config from '../config';
+import api from './axios'
+import { handleError } from './common'
 import { encode } from 'base-64';
-const { apiServer, apiUri } = config;
 
 interface Token {
     tokenType: string
@@ -10,59 +9,19 @@ interface Token {
 }
 
 export const authAPI = {
-    login: async (username: string, password: string): Promise<Token | undefined > => {
-        try {
-            let url = `${apiUri}/auth/login`
-            let response = await fetch(url, {
-                method: "GET",
-                mode: "cors",
-                headers: {
-                    "Authorization": "Basic " + encode(username + ":" + password),
-                },
-            });
-
-            if (response.status !== 200) {
-                throw new APIError(response.status, response.statusText, "Error when trying to log in");
-            }
-
-            return response.json().then((data) => data as Token);
-        } catch (err) {
-            console.error("Login error");
-            throw err;
-        }
+    login: async (username: string, password: string): Promise<Token> => {
+        return api.get(`auth/login`, {
+            headers: {
+                "Authorization": "Basic " + encode(username + ":" + password),
+            },
+        }).then((response) => response.data as Token).catch(error => handleError(error, "Error when trying to log in"))
     },
 
-    logout: async () => {
-        try {
-            let url = `${apiUri}/auth/logout`
-            let response = await fetch(url, {
-                method: "GET",
-                mode: "cors",
-            });
-
-            if (response.status !== 200) {
-                throw new APIError(response.status, response.statusText, "Error when trying to log out");
-            }
-        } catch (err) {
-            console.error("Logout error");
-            throw err;
-        }
+    logout: async (): Promise<void> => {
+        return api.get(`auth/logout`).then(_ => {}).catch((error) => handleError(error, "Error when trying to log out"))
     },
 
-    refreshToken: async () => {
-        try {
-            let url = `${apiUri}/auth/refresh_token`
-            let response = await fetch(url, {
-                method: "GET",
-                mode: "cors",
-            });
-
-            if (response.status !== 200) {
-                throw new APIError(response.status, response.statusText, "Error when trying to log out");
-            }
-        } catch (err) {
-            console.error("Logout error");
-            throw err;
-        }
+    refreshToken: async (): Promise<void> => {
+        return api.get(`auth/refresh_token`).then(_ => {}).catch((error) => handleError(error))
     },
 }

@@ -1,6 +1,5 @@
-import { APIError, handleErrorResponse } from './common'
-import config from '../config';
-const { apiServer, apiUri } = config;
+import api from './axios'
+import { handleError } from './common'
 
 export interface K8sRef {
     namespace?: string
@@ -66,58 +65,37 @@ export interface AgentInfo {
 
 export const controllerInfoAPI = {
     fetch: async (token: string): Promise<ControllerInfo> => {
-        try {
-            const response = await fetch(`${apiUri}/info/controller`, {
-                method: "GET",
-                mode: "cors",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`,
-                },
-            });
-
-            return handleErrorResponse(response).then((data) => data as ControllerInfo);
-        } catch (err) {
-            console.error("Unable to fetch Controller Info");
-            throw err;
-        }
+        return api.get(`info/controller`, {
+            headers: {
+                "Authorization": `Bearer ${token}`,
+            },
+        }).then((response) => response.data as ControllerInfo).catch((error) => {
+            console.error("Unable to fetch Controller Info")
+            handleError(error)
+        })
     },
 }
 
 export const agentInfoAPI = {
     fetchAll: async (token: string): Promise<AgentInfo[]> => {
-        try {
-            const response = await fetch(`${apiUri}/info/agents`, {
-                method: "GET",
-                mode: "cors",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`,
-                },
-            });
-
-            return handleErrorResponse(response).then((data) => data as AgentInfo[]);
-        } catch (err) {
-            console.error("Unable to fetch Agent Infos");
-            throw err;
-        }
+        return api.get(`info/agents`, {
+            headers: {
+                "Authorization": `Bearer ${token}`,
+            },
+        }).then((response) => response.data as AgentInfo[]).catch((error) => {
+            console.error("Unable to fetch Agent Infos")
+            handleError(error)
+        })
     },
 
     fetch: async (name: string, token: string): Promise<AgentInfo> => {
-        try {
-            const response = await fetch(`${apiUri}/info/agents/${name}`, {
-                method: "GET",
-                mode: "cors",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`,
-                },
-            });
-
-            return handleErrorResponse(response).then((data) => data as AgentInfo);
-        } catch (err) {
-            console.error("Unable to fetch Agent Info");
-            throw err;
-        }
+        return api.get(`info/agents/${name}`, {
+            headers: {
+                "Authorization": `Bearer ${token}`,
+            },
+        }).then((response) => response.data as AgentInfo).catch((error) => {
+            console.error("Unable to fetch Agent Info")
+            handleError(error)
+        })
     },
 }

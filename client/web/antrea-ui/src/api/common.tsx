@@ -1,3 +1,5 @@
+import { AxiosError } from 'axios'
+
 export class APIError extends Error {
     code: number;
     status: string;
@@ -19,22 +21,17 @@ export class APIError extends Error {
     }
 }
 
-export const handleErrorResponse = async (response: Response) => {
-    if (!response.ok) {
-        console.error("Returned error code: " + response.status);
-        console.error("Returned error status:" + response.statusText);
-        let errorMessage = "Error processing request.";
-
-        try {
-            const errorResponse = await response.json();
-            if (errorResponse) {
-                errorMessage = errorResponse;
+export function handleError(error: Error, message?: string) : never {
+    if (error instanceof AxiosError) {
+        if (error.response) {
+            let errorMessage = "Error processing request.";
+            if (message) {
+                errorMessage = message
+            } else if (error.response.data) {
+                errorMessage = JSON.stringify(error.response.data)
             }
-        } catch (e) {
-            // do nothing
-        } finally {
-            throw new APIError(response.status, response.statusText, errorMessage);
+            throw new APIError(error.response.status, error.response.statusText, errorMessage);
         }
     }
-    return response.json();
-};
+    throw error
+}
