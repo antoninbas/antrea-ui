@@ -72,6 +72,9 @@ func run() error {
 
 	stopCh := signals.RegisterSignalHandlers()
 
+	go traceflowHandler.Run(stopCh)
+	go tokenManager.Run(stopCh)
+
 	// Initializing the server in a goroutine so that
 	// it won't block the graceful shutdown handling below
 	go func() {

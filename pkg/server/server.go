@@ -2,13 +2,11 @@ package server
 
 import (
 	"database/sql"
-	"fmt"
 	"net/http"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-logr/logr"
-	"github.com/google/uuid"
 	"k8s.io/client-go/dynamic"
 
 	"antrea.io/antrea-ui/pkg/auth"
@@ -41,17 +39,6 @@ func NewServer(
 		passwordStore:            passwordStore,
 		tokenManager:             tokenManager,
 	}
-}
-
-func tenantUUIDFromURL(c *gin.Context) (string, *serverError) {
-	tenantUUID := c.Param("tenantUUID")
-	if _, err := uuid.Parse(tenantUUID); err != nil {
-		return "", &serverError{
-			code:    http.StatusBadRequest,
-			message: fmt.Sprintf("Invalid tenantUUID: %s", err.Error()),
-		}
-	}
-	return tenantUUID, nil
 }
 
 func (s *server) checkBearerToken(c *gin.Context) {

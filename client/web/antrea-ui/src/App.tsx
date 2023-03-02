@@ -4,37 +4,17 @@ import './App.css'
 import { Outlet, Link, useNavigate } from "react-router-dom";
 import NavTab from './components/nav';
 import Login from './components/login';
+import { useLogout} from './components/logout';
 import { AccessTokenProvider, useAccessToken } from './api/token';
 import { CdsButton } from '@cds/react/button';
 import { APIErrorProvider, APIErrorNotification } from './components/errors';
 
-function saveToken(token: string) {
-    sessionStorage.setItem('token', token);
-}
-
-function retrieveToken(): string | undefined {
-    const token = sessionStorage.getItem('token');
-    return token ? token : undefined;
-}
-
-function removeToken() {
-    sessionStorage.removeItem('token')
-}
-
 function LoginWall(props: React.PropsWithChildren) {
     const [accessToken, setAccessToken] = useAccessToken();
-    const savedToken = retrieveToken()
 
     function doSetToken(token: string) {
-        saveToken(token)
         setAccessToken(token)
     }
-
-    useEffect(() => {
-        if (savedToken && !accessToken) {
-            setAccessToken(savedToken)
-        }
-    }, [])
 
     if (!accessToken) {
         return (
@@ -53,11 +33,11 @@ function LoginWall(props: React.PropsWithChildren) {
 }
 
 function Logout() {
-    const navigate = useNavigate();
+    const [logoutComplete, logout] = useLogout();
 
     return (
         <div cds-layout="vertical p:md gap:md">
-            <CdsButton type="button" action="outline" onClick={()=> { removeToken(); navigate("/"); navigate(0); }}>Logout</CdsButton>
+            <CdsButton type="button" action="outline" onClick={()=> { logout(); }}>Logout</CdsButton>
         </div>
     )
 }

@@ -6,6 +6,7 @@ const { apiServer, apiUri } = config;
 interface Token {
     tokenType: string
     accessToken: string
+    expiresIn: number
 }
 
 export const authAPI = {
@@ -29,5 +30,39 @@ export const authAPI = {
             console.error("Login error");
             throw err;
         }
-    }
+    },
+
+    logout: async () => {
+        try {
+            let url = `${apiUri}/auth/logout`
+            let response = await fetch(url, {
+                method: "GET",
+                mode: "cors",
+            });
+
+            if (response.status !== 200) {
+                throw new APIError(response.status, response.statusText, "Error when trying to log out");
+            }
+        } catch (err) {
+            console.error("Logout error");
+            throw err;
+        }
+    },
+
+    refreshToken: async () => {
+        try {
+            let url = `${apiUri}/auth/refresh_token`
+            let response = await fetch(url, {
+                method: "GET",
+                mode: "cors",
+            });
+
+            if (response.status !== 200) {
+                throw new APIError(response.status, response.statusText, "Error when trying to log out");
+            }
+        } catch (err) {
+            console.error("Logout error");
+            throw err;
+        }
+    },
 }
