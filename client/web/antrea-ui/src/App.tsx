@@ -10,10 +10,26 @@ import { APIErrorProvider, APIErrorNotification } from './components/errors';
 import { Provider, useSelector, useDispatch } from 'react-redux'
 import type { RootState } from './store'
 import { store, setToken } from './store'
+import { authAPI } from './api/auth'
 
 function LoginWall(props: React.PropsWithChildren) {
     const token = useSelector((state: RootState) => state.token)
     const dispatch = useDispatch()
+
+    useEffect(() => {
+        async function refreshToken() {
+            try {
+                await authAPI.refreshToken()
+            } catch (error) {
+
+            }
+        }
+
+        if (token === undefined) {
+            // try a refresh
+            refreshToken()
+        }
+    }, [token])
 
     function doSetToken(token: string) {
         dispatch(setToken(token))

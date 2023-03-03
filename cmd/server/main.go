@@ -60,8 +60,10 @@ func run() error {
 	// TODO(antonin): CHANGEME
 	// This is for testing, it should be configurable
 	corsConfig := cors.DefaultConfig()
-	corsConfig.AllowAllOrigins = true
+	// corsConfig.AllowAllOrigins = true
+	corsConfig.AllowOrigins = []string{"http://localhost:3000"}
 	corsConfig.AddAllowHeaders("Authorization")
+	corsConfig.AllowCredentials = true
 	router.Use(cors.New(corsConfig))
 	s.AddRoutes(router)
 

@@ -11,7 +11,9 @@ import (
 )
 
 const (
-	Issuer = "ui.antrea.io"
+	Issuer               = "ui.antrea.io"
+	tokenLifetime        = 10 * time.Minute
+	refreshTokenLifetime = 24 * time.Hour
 )
 
 type Token struct {
@@ -82,11 +84,11 @@ func (m *tokenManager) getToken(expiresIn time.Duration) (*Token, error) {
 }
 
 func (m *tokenManager) GetToken() (*Token, error) {
-	return m.getToken(5 * time.Minute)
+	return m.getToken(tokenLifetime)
 }
 
 func (m *tokenManager) GetRefreshToken() (*Token, error) {
-	token, err := m.getToken(24 * time.Hour)
+	token, err := m.getToken(refreshTokenLifetime)
 	if err != nil {
 		return nil, err
 	}
