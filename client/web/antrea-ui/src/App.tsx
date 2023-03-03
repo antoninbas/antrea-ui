@@ -21,7 +21,7 @@ function LoginWall(props: React.PropsWithChildren) {
             try {
                 await authAPI.refreshToken()
             } catch (error) {
-
+                // ignore error
             }
         }
 
@@ -75,12 +75,14 @@ function App() {
                 <Provider store={store}>
                     <div cds-layout="horizontal align:top wrap:none" style={{height: "100%"}}>
                         <NavTab />
-                        <LoginWall>
-                            <APIErrorProvider>
-                                <Outlet />
+                        <APIErrorProvider>
+                            <div cds-layout="vertical">
+                                <LoginWall>
+                                    <Outlet />
+                                </LoginWall>
                                 <APIErrorNotification />
-                            </APIErrorProvider>
-                        </LoginWall>
+                            </div>
+                        </APIErrorProvider>
                     </div>
                     <Logout />
                 </Provider>

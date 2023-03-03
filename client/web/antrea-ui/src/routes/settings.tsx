@@ -1,32 +1,38 @@
 import { useForm, SubmitHandler } from "react-hook-form";
-import { useNavigate } from "react-router-dom";
 import { CdsCard } from '@cds/react/card';
 import { CdsDivider } from '@cds/react/divider';
 import { CdsButton } from '@cds/react/button';
 import { CdsFormGroup } from '@cds/react/forms';
 import { CdsInput } from "@cds/react/input";
 import { CdsPassword } from "@cds/react/password";
+import { ErrorMessage } from '@hookform/error-message';
+import { ErrorMessageContainer } from '../components/form-errors';
+import { useLogout} from '../components/logout';
 import { accountAPI } from '../api/account';
+import { useAPIError} from '../components/errors';
 
 type Inputs = {
+    currentPassword: string
     newPassword: string
+    newPassword2: string
 };
 
 function UpdatePassword() {
-    const { register, handleSubmit, reset, formState: { errors } } = useForm<Inputs>();
+    const { register, watch, handleSubmit, reset, formState: { errors } } = useForm<Inputs>();
 
-    const navigate = useNavigate();
+    const [logoutComplete, logout] = useLogout();
+
+    const { addError, removeError } = useAPIError();
 
     const onSubmit: SubmitHandler<Inputs> = async data => {
         try {
-            await accountAPI.updatePassword(data.newPassword)
+            await accountAPI.updatePassword(data.currentPassword, data.newPassword)
         } catch(e) {
-
+            if (e instanceof Error ) addError(e)
+            console.error(e)
+            return
         }
-        // TODO: avoid code duplication with App.tsx for logout
-        sessionStorage.removeItem('token')
-        navigate("/")
-        navigate(0)
+        logout();
     }
 
     return (
@@ -39,9 +45,43 @@ function UpdatePassword() {
                 <form onSubmit = {handleSubmit(onSubmit)}>
                     <CdsFormGroup layout="horizontal">
                         <CdsPassword>
-                            <label>New Password</label>
-                            <input type="password" {...register("newPassword")} />
+                            <label>Current Password</label>
+                            <input type="password" {...register("currentPassword", {
+                                required: "Required field",
+                            })} />
                         </CdsPassword>
+                        <ErrorMessage
+                            errors={errors}
+                            name="currentPassword"
+                            as={<ErrorMessageContainer />}
+                        />
+                        <CdsPassword>
+                            <label>New Password</label>
+                            <input type="password" {...register("newPassword", {
+                                required: "Required field",
+                            })} />
+                        </CdsPassword>
+                        <ErrorMessage
+                            errors={errors}
+                            name="newPassword"
+                            as={<ErrorMessageContainer />}
+                        />
+                        <CdsPassword>
+                            <label>Confirm New Password</label>
+                            <input type="password" {...register("newPassword2", {
+                                required: "Required field",
+                                validate: (value: string) => {
+                                    if (value != watch("newPassword")) {
+                                        return "Passwords don't match"
+                                    }
+                                },
+                            })} />
+                        </CdsPassword>
+                        <ErrorMessage
+                            errors={errors}
+                            name="newPassword2"
+                            as={<ErrorMessageContainer />}
+                        />
                         <CdsButton type="submit">Submit</CdsButton>
                     </CdsFormGroup>
                 </form>

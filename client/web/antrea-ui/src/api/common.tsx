@@ -25,10 +25,10 @@ export function handleError(error: Error, message?: string) : never {
     if (error instanceof AxiosError) {
         if (error.response) {
             let errorMessage = "Error processing request.";
-            if (message) {
-                errorMessage = message
-            } else if (error.response.data) {
+            if (error.response.data) {
                 errorMessage = JSON.stringify(error.response.data)
+            } else if (message) {
+                errorMessage = message
             }
             throw new APIError(error.response.status, error.response.statusText, errorMessage);
         }
