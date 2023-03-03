@@ -1,12 +1,19 @@
-import api from './axios'
+import axios from 'axios'
 import { handleError } from './common'
 import { encode } from 'base-64';
+import config from '../config';
+
+const { apiUri } = config;
 
 interface Token {
     tokenType: string
     accessToken: string
     expiresIn: number
 }
+
+const api = axios.create({
+    baseURL: apiUri,
+});
 
 export const authAPI = {
     login: async (username: string, password: string): Promise<Token> => {

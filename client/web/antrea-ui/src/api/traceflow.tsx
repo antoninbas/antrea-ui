@@ -1,6 +1,5 @@
 import api from './axios'
 import { APIError, handleError } from './common'
-import { getToken } from './token'
 import config from '../config';
 
 const { apiServer } = config;
@@ -88,7 +87,6 @@ export const traceflowAPI = {
             let response = await api.post(`traceflow`, {spec: tf}, {
                 headers: {
                     "Content-Type": "application/json",
-                    "Authorization": `Bearer ${getToken()}`,
                 },
                 validateStatus: (status: number) => status === 202,
             })
@@ -100,17 +98,11 @@ export const traceflowAPI = {
                 await new Promise(r => setTimeout(r, waitFor));
                 response = await api.get(`${location}`, {
                     baseURL: `${apiServer}`,
-                    headers: {
-                        "Authorization": `Bearer ${getToken()}`,
-                    },
-                validateStatus: (status: number) => status === 200 || status === 202,
+                    validateStatus: (status: number) => status === 200 || status === 202,
                 });
                 if (response.status === 200) {
                     if (withDelete) {
                         await api.delete(`${response.request.responseURL}`, {
-                            headers: {
-                                "Authorization": `Bearer ${getToken()}`,
-                            },
                             validateStatus: (status: number) => status === 200,
                         }).then(_ => console.log("Traceflow deleted successfully")).catch(_ => console.error("Unable to delete traceflow"))
                     }
