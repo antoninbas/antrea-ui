@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { CdsCard } from '@cds/react/card';
 import { CdsDivider } from '@cds/react/divider';
 import { AgentInfo, ControllerInfo, K8sRef, agentInfoAPI, controllerInfoAPI } from '../api/info';
-import { useAccessToken } from '../api/token';
 import { APIError } from '../api/common';
 import { useAPIError} from '../components/errors';
 import { WaitForAPIResource } from '../components/progress';
@@ -85,13 +84,12 @@ function ComponentSummary<T>(props: {title: string, data: T[], propertyNames: Pr
 export default function Summary() {
     const [controllerInfo, setControllerInfo] = useState<ControllerInfo>();
     const [agentInfos, setAgentInfos] = useState<AgentInfo[]>();
-    const [accessToken, _] = useAccessToken();
     const { addError, removeError } = useAPIError();
 
     useEffect(() => {
         async function getControllerInfo() {
             try {
-                const controllerInfo = await controllerInfoAPI.fetch(accessToken);
+                const controllerInfo = await controllerInfoAPI.fetch();
                 return controllerInfo;
             } catch(e) {
                 if (e instanceof Error ) addError(e)
@@ -101,7 +99,7 @@ export default function Summary() {
 
         async function getAgentInfos() {
             try {
-                const agentInfos = await agentInfoAPI.fetchAll(accessToken)
+                const agentInfos = await agentInfoAPI.fetchAll()
                 return agentInfos;
             } catch(e) {
                 if (e instanceof Error ) addError(e)
@@ -122,7 +120,7 @@ export default function Summary() {
         }
 
         getData();
-    }, [accessToken, addError, removeError])
+    }, [addError, removeError])
 
     return (
         <main>

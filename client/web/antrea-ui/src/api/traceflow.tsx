@@ -1,5 +1,6 @@
 import api from './axios'
 import { APIError, handleError } from './common'
+import { getToken } from './token'
 import config from '../config';
 
 const { apiServer } = config;
@@ -82,12 +83,12 @@ interface Traceflow {
 }
 
 export const traceflowAPI = {
-    runTraceflow: async (tf: TraceflowSpec, withDelete: boolean, token: string): Promise<TraceflowStatus | undefined> => {
+    runTraceflow: async (tf: TraceflowSpec, withDelete: boolean): Promise<TraceflowStatus | undefined> => {
         try {
             let response = await api.post(`traceflow`, {spec: tf}, {
                 headers: {
                     "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`,
+                    "Authorization": `Bearer ${getToken()}`,
                 },
                 validateStatus: (status: number) => status === 202,
             })
@@ -100,7 +101,7 @@ export const traceflowAPI = {
                 response = await api.get(`${location}`, {
                     baseURL: `${apiServer}`,
                     headers: {
-                        "Authorization": `Bearer ${token}`,
+                        "Authorization": `Bearer ${getToken()}`,
                     },
                 validateStatus: (status: number) => status === 200 || status === 202,
                 });
@@ -108,7 +109,7 @@ export const traceflowAPI = {
                     if (withDelete) {
                         await api.delete(`${response.request.responseURL}`, {
                             headers: {
-                                "Authorization": `Bearer ${token}`,
+                                "Authorization": `Bearer ${getToken()}`,
                             },
                             validateStatus: (status: number) => status === 200,
                         }).then(_ => console.log("Traceflow deleted successfully")).catch(_ => console.error("Unable to delete traceflow"))

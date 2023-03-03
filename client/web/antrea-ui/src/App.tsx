@@ -5,18 +5,21 @@ import { Outlet, Link, useNavigate } from "react-router-dom";
 import NavTab from './components/nav';
 import Login from './components/login';
 import { useLogout} from './components/logout';
-import { AccessTokenProvider, useAccessToken } from './api/token';
 import { CdsButton } from '@cds/react/button';
 import { APIErrorProvider, APIErrorNotification } from './components/errors';
+import { Provider, useSelector, useDispatch } from 'react-redux'
+import type { RootState } from './store'
+import { store, setToken } from './store'
 
 function LoginWall(props: React.PropsWithChildren) {
-    const [accessToken, setAccessToken] = useAccessToken();
+    const token = useSelector((state: RootState) => state.token)
+    const dispatch = useDispatch()
 
     function doSetToken(token: string) {
-        setAccessToken(token)
+        dispatch(setToken(token))
     }
 
-    if (!accessToken) {
+    if (!token) {
         return (
             <div cds-layout="vertical p:md gap:md">
                 <p cds-text="section" >Please log in</p>
@@ -53,7 +56,7 @@ function App() {
                     </Link>
                     <p cds-text="heading" cds-layout="align:vertical-center">Antrea UI</p>
                 </header>
-                <AccessTokenProvider>
+                <Provider store={store}>
                     <div cds-layout="horizontal align:top wrap:none" style={{height: "100%"}}>
                         <NavTab />
                         <LoginWall>
@@ -64,7 +67,7 @@ function App() {
                         </LoginWall>
                     </div>
                     <Logout />
-                </AccessTokenProvider>
+                </Provider>
             </div>
         </div>
     );

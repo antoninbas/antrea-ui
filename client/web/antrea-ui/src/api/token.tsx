@@ -1,14 +1,9 @@
-import React, { useContext, createContext, useState } from 'react'
+import { store, setToken as writeToken } from '../store'
 
-type AccessTokenContext = [string, React.Dispatch<React.SetStateAction<string>>]
-
-function AccessTokenProvider(props: React.PropsWithChildren) {
-    const [accessToken, setAccessToken] = useState<string>("")
-    return <AccessToken.Provider value={[accessToken, setAccessToken]} {...props} />
+export function getToken(): string {
+    return store.getState().token
 }
 
-const AccessToken = createContext<AccessTokenContext>(["", {} as React.Dispatch<React.SetStateAction<string>>])
-
-const useAccessToken = (): AccessTokenContext => useContext<AccessTokenContext>(AccessToken)
-
-export { AccessTokenProvider, useAccessToken }
+export function setToken(token: string) {
+    store.dispatch(writeToken(token))
+}

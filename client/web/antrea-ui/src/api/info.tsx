@@ -1,5 +1,6 @@
 import api from './axios'
 import { handleError } from './common'
+import { getToken } from './token'
 
 export interface K8sRef {
     namespace?: string
@@ -64,10 +65,10 @@ export interface AgentInfo {
 }
 
 export const controllerInfoAPI = {
-    fetch: async (token: string): Promise<ControllerInfo> => {
+    fetch: async (): Promise<ControllerInfo> => {
         return api.get(`info/controller`, {
             headers: {
-                "Authorization": `Bearer ${token}`,
+                "Authorization": `Bearer ${getToken()}`,
             },
         }).then((response) => response.data as ControllerInfo).catch((error) => {
             console.error("Unable to fetch Controller Info")
@@ -77,10 +78,10 @@ export const controllerInfoAPI = {
 }
 
 export const agentInfoAPI = {
-    fetchAll: async (token: string): Promise<AgentInfo[]> => {
+    fetchAll: async (): Promise<AgentInfo[]> => {
         return api.get(`info/agents`, {
             headers: {
-                "Authorization": `Bearer ${token}`,
+                "Authorization": `Bearer ${getToken()}`,
             },
         }).then((response) => response.data as AgentInfo[]).catch((error) => {
             console.error("Unable to fetch Agent Infos")
@@ -88,10 +89,10 @@ export const agentInfoAPI = {
         })
     },
 
-    fetch: async (name: string, token: string): Promise<AgentInfo> => {
+    fetch: async (name: string): Promise<AgentInfo> => {
         return api.get(`info/agents/${name}`, {
             headers: {
-                "Authorization": `Bearer ${token}`,
+                "Authorization": `Bearer ${getToken()}`,
             },
         }).then((response) => response.data as AgentInfo).catch((error) => {
             console.error("Unable to fetch Agent Info")

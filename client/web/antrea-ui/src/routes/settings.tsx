@@ -7,7 +7,6 @@ import { CdsFormGroup } from '@cds/react/forms';
 import { CdsInput } from "@cds/react/input";
 import { CdsPassword } from "@cds/react/password";
 import { accountAPI } from '../api/account';
-import { useAccessToken } from '../api/token';
 
 type Inputs = {
     newPassword: string
@@ -15,13 +14,12 @@ type Inputs = {
 
 function UpdatePassword() {
     const { register, handleSubmit, reset, formState: { errors } } = useForm<Inputs>();
-    const [accessToken, _] = useAccessToken();
 
     const navigate = useNavigate();
 
     const onSubmit: SubmitHandler<Inputs> = async data => {
         try {
-            await accountAPI.updatePassword(data.newPassword, accessToken)
+            await accountAPI.updatePassword(data.newPassword)
         } catch(e) {
 
         }
