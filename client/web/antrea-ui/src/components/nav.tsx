@@ -47,18 +47,6 @@ export default function NavTab() {
                 </Link>
             </CdsNavigationItem>
             <CdsNavigationItem>
-                <Link to="/flows">
-                    <CdsIcon shape={eyeIconName} solid size="sm"></CdsIcon>
-                    Flow Visibility
-                </Link>
-            </CdsNavigationItem>
-            <CdsNavigationItem>
-                <Link to="/policies">
-                    <CdsIcon shape={firewallIconName} solid size="sm"></CdsIcon>
-                    Network Policies
-                </Link>
-            </CdsNavigationItem>
-            <CdsNavigationItem>
                 <Link to="/settings">
                     <CdsIcon shape={cogIconName} solid size="sm"></CdsIcon>
                     Settings
