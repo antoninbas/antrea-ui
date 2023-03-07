@@ -3,7 +3,7 @@ name: antrea-ui
 type: application
 displayName: Antrea UI
 home: https://antrea.io/
-version: 0.1.0
+version: 0.0.0
 appVersion: latest
 kubeVersion: ">= 1.16.0-0"
 icon: https://raw.githubusercontent.com/antrea-io/antrea/main/docs/assets/logo/antrea_logo.svg

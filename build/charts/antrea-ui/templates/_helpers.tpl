@@ -25,3 +25,11 @@
 {{- define "backendImage" -}}
 {{- print .Values.backend.image.repository ":" (include "backendImageTag" .) -}}
 {{- end -}}
+
+{{- define "validateValues" -}}
+{{- if .Values.https.enabled -}}
+{{- if not ( has .Values.https.method ( list "auto" ) ) -}}
+{{- fail "https.method is not valid" -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}

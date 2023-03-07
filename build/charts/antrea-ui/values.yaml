@@ -1,38 +1,62 @@
+# -- Configuration for the Antrea UI frontend container.
 frontend:
+  # -- Container image to use for the Antrea UI frontend.
   image:
     repository: "antrea/antrea-ui-frontend"
     pullPolicy: "IfNotPresent"
     tag: ""
+  # -- Container port on which the frontend will listen.
   port: 3000
+  # -- Resource requests and limits for the frontend container.
   resources: {}
 
+# -- Configuration for the Antrea UI backend container.
 backend:
+  # -- Container image to use for the Antrea UI backend.
   image:
     repository: "antrea/antrea-ui-backend"
     pullPolicy: "IfNotPresent"
     tag: ""
+  # -- Container port on which the backend will listen/
   port: 8080
+  # -- Resource requests and limits for the backend container.
   resources: {}
 
+# -- HTTPS configuration for the Antrea UI.
 https:
+  # -- Enable HTTPS (only) for accessing the web UI.
   enabled: false
+  # -- Method for generating the TLS certificate for the web server. At the moment, only "auto" is
+  # supported, which means that Helm will generate a new self-signed certificate every time the
+  # template function is executed.
   method: "auto"
+  # -- Configure automatic TLS certificate generation with Helm.
   auto:
+    # -- Common name to use in the certificate.
     commonName: "localhost"
+    # -- IP addresses to use in the certificate.
     ipAddresses: []
+    # -- DNS names to use in the certificate.
     dnsNames: []
+    # -- Number of days for which the certificate will be valid. There is no automatic rotation with
+    # this method.
     daysValid: 365
 
+# -- Configuration for the Antrea UI Service.
 service:
-  # --- The type of service used for Antrea UI access, either ClusterIP or NodePort.
+  # --- The type of Service used for Antrea UI access, either ClusterIP or NodePort.
   type: ClusterIP
+  # -- The port on which the Service is exposed.
   port: 3000
-  # --- The port to use when the service type is NodePort.
+  # --- The Node port to use when the Service type is NodePort.
   nodePort: 31234
 
+# -- Node selector for the Antrea UI Pod.
 nodeSelector:
   kubernetes.io/os: linux
 
+# -- Affinity for the Antrea UI Pod.
 affinity: {}
 
+# -- Tolerations for the Antrea UI Pod.
 tolerations: {}

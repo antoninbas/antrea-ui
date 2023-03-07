@@ -1,9 +1,10 @@
 {{- define "antrea-ui.nginx.conf" }}
+{{- $port := .Values.service.port -}}
 server {
     {{- if .Values.https.enabled }}
-    listen       3000 ssl;
+    listen       {{ $port }} ssl;
     {{- else }}
-    listen       3000;
+    listen       {{ $port }};
     {{- end }}
     server_name _;
     root /app;

@@ -55,6 +55,7 @@ spec:
               mountPath: /etc/nginx/conf.d/default.conf
               subPath: nginx.conf
               readOnly: true
+            {{- if .Values.https.enabled }}
             - name: nginx-tls-cert
               mountPath: /app/nginx-cert.pem
               subPath: cert.pem
@@ -63,10 +64,13 @@ spec:
               mountPath: /app/nginx-key.pem
               subPath: key.pem
               readOnly: true
+            {{- end }}
         - name: backend
           image: {{ include "backendImage" . | quote }}
           imagePullPolicy: {{ .Values.backend.image.pullPolicy }}
           args:
+            - "-addr"
+            - ":{{ .Values.backend.port }}"
             - "-jwt-key"
             - "/app/jwt-key.pem"
             {{- if .Values.https.enabled }}
@@ -116,6 +120,7 @@ spec:
           secret:
             secretName: antrea-ui-jwt-key
             defaultMode: 0400
+        {{- if .Values.https.enabled }}
         - name: nginx-tls-cert
           secret:
             secretName: antrea-ui-tls-cert
@@ -124,4 +129,5 @@ spec:
           secret:
             secretName: antrea-ui-tls-key
             defaultMode: 0400
+        {{- end }}
       terminationGracePeriodSeconds: 10
