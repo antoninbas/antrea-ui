@@ -27,9 +27,10 @@ import (
 )
 
 var (
-	serverAddr string
-	logger     logr.Logger
-	jwtKeyPath string
+	serverAddr   string
+	logger       logr.Logger
+	jwtKeyPath   string
+	cookieSecure bool
 )
 
 func run() error {
@@ -48,7 +49,15 @@ func run() error {
 	}
 	tokenManager := auth.NewTokenManager("key", auth.LoadPrivateKeyOrDie(jwtKeyPath))
 
-	s := server.NewServer(logger, db, k8sClient, traceflowHandler, passwordStore, tokenManager)
+	s := server.NewServer(
+		logger,
+		db,
+		k8sClient,
+		traceflowHandler,
+		passwordStore,
+		tokenManager,
+		server.SetCookieSecure(cookieSecure),
+	)
 	if env.IsProductionEnv() {
 		gin.SetMode(gin.ReleaseMode)
 	}
@@ -98,6 +107,7 @@ func run() error {
 func main() {
 	flag.StringVar(&serverAddr, "addr", ":8080", "Listening address for server")
 	flag.StringVar(&jwtKeyPath, "jwt-key", "", "Path to PEM private key file to generate JWT tokens")
+	flag.BoolVar(&cookieSecure, "cookie-secure", false, "Set the Secure attribute for authentication cookie, which requires HTTPS")
 	flag.Parse()
 
 	zc := zap.NewProductionConfig()

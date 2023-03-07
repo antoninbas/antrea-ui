@@ -21,6 +21,19 @@ type server struct {
 	traceflowRequestsHandler traceflowhandler.RequestsHandler
 	passwordStore            password.Store
 	tokenManager             auth.TokenManager
+	config                   serverConfig
+}
+
+type serverConfig struct {
+	cookieSecure bool
+}
+
+type ServerOptions func(c *serverConfig)
+
+func SetCookieSecure(v bool) ServerOptions {
+	return func(c *serverConfig) {
+		c.cookieSecure = v
+	}
 }
 
 func NewServer(
@@ -30,7 +43,12 @@ func NewServer(
 	traceflowRequestsHandler traceflowhandler.RequestsHandler,
 	passwordStore password.Store,
 	tokenManager auth.TokenManager,
+	options ...ServerOptions,
 ) *server {
+	config := serverConfig{}
+	for _, fn := range options {
+		fn(&config)
+	}
 	return &server{
 		logger:                   logger,
 		db:                       db,
@@ -38,6 +56,7 @@ func NewServer(
 		traceflowRequestsHandler: traceflowRequestsHandler,
 		passwordStore:            passwordStore,
 		tokenManager:             tokenManager,
+		config:                   config,
 	}
 }
 

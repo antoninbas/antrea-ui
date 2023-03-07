@@ -16,6 +16,12 @@ backend:
 
 https:
   enabled: false
+  method: "auto"
+  auto:
+    commonName: "localhost"
+    ipAddresses: []
+    dnsNames: []
+    daysValid: 365
 
 service:
   # --- The type of service used for Antrea UI access, either ClusterIP or NodePort.

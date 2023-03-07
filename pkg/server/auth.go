@@ -56,7 +56,7 @@ func (s *server) Login(c *gin.Context) {
 			Path:     "/api/v1/auth",
 			Domain:   "",
 			MaxAge:   int(refreshToken.ExpiresIn / time.Second),
-			Secure:   false,
+			Secure:   s.config.cookieSecure,
 			HttpOnly: true,
 			SameSite: http.SameSiteStrictMode,
 		})
