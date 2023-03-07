@@ -7,12 +7,12 @@ import { WaitForAPIResource } from '../components/progress';
 
 type Property = string
 
-const controllerProperties: Property[] = ["Name", "Version", "Pod Name", "Node Name", "Connected Agents"]
-const agentProperties: Property[] = ["Name", "Version", "Pod Name", "Node Name", "Local Pods", "OVS Version"]
+const controllerProperties: Property[] = ["Name", "Version", "Pod Name", "Node Name", "Connected Agents"];
+const agentProperties: Property[] = ["Name", "Version", "Pod Name", "Node Name", "Local Pods", "OVS Version"];
 
 function refToString(ref: K8sRef): string {
-    if (ref.namespace) return ref.namespace + '/' + ref.name
-    return ref.name
+    if (ref.namespace) return ref.namespace + '/' + ref.name;
+    return ref.name;
 }
 
 function controllerPropertyValues(controller: ControllerInfo): string[] {
@@ -22,7 +22,7 @@ function controllerPropertyValues(controller: ControllerInfo): string[] {
         refToString(controller.podRef),
         refToString(controller.nodeRef),
         (controller.connectedAgentNum??0).toString(),
-    ]
+    ];
 }
 
 function agentPropertyValues(agent: AgentInfo): string[] {
@@ -33,12 +33,12 @@ function agentPropertyValues(agent: AgentInfo): string[] {
         refToString(agent.nodeRef),
         (agent.localPodNum??0).toString(),
         agent.ovsInfo.version,
-    ]
+    ];
 }
 
 function ComponentSummary<T>(props: {title: string, data: T[], propertyNames: Property[], getProperties: (x: T) => string[]}) {
-    const propertyNames = props.propertyNames
-    const data = props.data
+    const propertyNames = props.propertyNames;
+    const data = props.data;
 
     return (
         <CdsCard>
@@ -60,7 +60,7 @@ function ComponentSummary<T>(props: {title: string, data: T[], propertyNames: Pr
                     <tbody>
                         {
                             data.map((x: T, idx: number) => {
-                                const values = props.getProperties(x)
+                                const values = props.getProperties(x);
                                 return (
                                     <tr key={idx}>
                                         {
@@ -69,7 +69,7 @@ function ComponentSummary<T>(props: {title: string, data: T[], propertyNames: Pr
                                             ))
                                         }
                                     </tr>
-                                )
+                                );
                             })
                         }
                     </tbody>
@@ -90,27 +90,27 @@ export default function Summary() {
                 const controllerInfo = await controllerInfoAPI.fetch();
                 return controllerInfo;
             } catch(e) {
-                if (e instanceof Error ) addError(e)
-                console.error(e)
+                if (e instanceof Error ) addError(e);
+                console.error(e);
             }
         }
 
         async function getAgentInfos() {
             try {
-                const agentInfos = await agentInfoAPI.fetchAll()
+                const agentInfos = await agentInfoAPI.fetchAll();
                 return agentInfos;
             } catch(e) {
-                if (e instanceof Error ) addError(e)
-                console.error(e)
+                if (e instanceof Error ) addError(e);
+                console.error(e);
             }
         }
 
         // Defining this functions inside of useEffect is recommended
         // https://reactjs.org/docs/hooks-faq.html#is-it-safe-to-omit-functions-from-the-list-of-dependencies
         async function getData() {
-            let [controllerInfo, agentInfos] = await Promise.all([getControllerInfo(), getAgentInfos()])
-            setControllerInfo(controllerInfo)
-            setAgentInfos(agentInfos)
+            let [controllerInfo, agentInfos] = await Promise.all([getControllerInfo(), getAgentInfos()]);
+            setControllerInfo(controllerInfo);
+            setAgentInfos(agentInfos);
 
             if (controllerInfo !== undefined && agentInfos !== undefined) {
                 removeError();
@@ -118,7 +118,7 @@ export default function Summary() {
         }
 
         getData();
-    }, [addError, removeError])
+    }, [addError, removeError]);
 
     return (
         <main>

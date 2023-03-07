@@ -25,14 +25,14 @@ function UpdatePassword() {
 
     const onSubmit: SubmitHandler<Inputs> = async data => {
         try {
-            await accountAPI.updatePassword(data.currentPassword, data.newPassword)
+            await accountAPI.updatePassword(data.currentPassword, data.newPassword);
         } catch(e) {
-            if (e instanceof Error ) addError(e)
-            console.error(e)
-            return
+            if (e instanceof Error ) addError(e);
+            console.error(e);
+            return;
         }
         logout();
-    }
+    };
 
     return (
         <CdsCard>
@@ -71,7 +71,7 @@ function UpdatePassword() {
                                 required: "Required field",
                                 validate: (value: string) => {
                                     if (value !== watch("newPassword")) {
-                                        return "Passwords don't match"
+                                        return "Passwords don't match";
                                     }
                                 },
                             })} />

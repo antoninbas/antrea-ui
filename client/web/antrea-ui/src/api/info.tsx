@@ -1,5 +1,5 @@
-import api from './axios'
-import { handleError } from './common'
+import api from './axios';
+import { handleError } from './common';
 
 export interface K8sRef {
     namespace?: string
@@ -68,28 +68,28 @@ export const controllerInfoAPI = {
         return api.get(
             `info/controller`,
         ).then((response) => response.data as ControllerInfo).catch((error) => {
-            console.error("Unable to fetch Controller Info")
-            handleError(error)
-        })
+            console.error("Unable to fetch Controller Info");
+            handleError(error);
+        });
     },
-}
+};
 
 export const agentInfoAPI = {
     fetchAll: async (): Promise<AgentInfo[]> => {
         return api.get(
             `info/agents`,
         ).then((response) => response.data as AgentInfo[]).catch((error) => {
-            console.error("Unable to fetch Agent Infos")
-            handleError(error)
-        })
+            console.error("Unable to fetch Agent Infos");
+            handleError(error);
+        });
     },
 
     fetch: async (name: string): Promise<AgentInfo> => {
         return api.get(
             `info/agents/${name}`,
         ).then((response) => response.data as AgentInfo).catch((error) => {
-            console.error("Unable to fetch Agent Info")
-            handleError(error)
-        })
+            console.error("Unable to fetch Agent Info");
+            handleError(error);
+        });
     },
-}
+};

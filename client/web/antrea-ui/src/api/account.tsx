@@ -1,5 +1,5 @@
-import api from './axios'
-import { handleError } from './common'
+import api from './axios';
+import { handleError } from './common';
 import { encode } from 'base-64';
 
 export const accountAPI = {
@@ -11,6 +11,6 @@ export const accountAPI = {
             headers: {
                 "Content-Type": "application/json",
             },
-        }).then((response) => {}).catch(handleError)
+        }).then((response) => {}).catch(handleError);
     },
-}
+};

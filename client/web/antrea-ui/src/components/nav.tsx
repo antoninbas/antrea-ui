@@ -25,7 +25,7 @@ ClarityIcons.addIcons(
     // eyeIcon,
     bugIcon,
     // firewallIcon,
-)
+);
 
 export default function NavTab() {
     const [navigationOpen, setNavigationOpen] = useState<boolean>(true);

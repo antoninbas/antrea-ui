@@ -20,13 +20,13 @@ export default function Login(props: { setToken: (token: string) => void }) {
 
     const onSubmit: SubmitHandler<Inputs> = async data => {
         try {
-            const token = await authAPI.login(data.username, data.password)
-            if (token) setToken(token.accessToken)
+            const token = await authAPI.login(data.username, data.password);
+            if (token) setToken(token.accessToken);
         } catch(e) {
-            if (e instanceof Error ) addError(e)
-            console.error(e)
+            if (e instanceof Error ) addError(e);
+            console.error(e);
         }
-    }
+    };
 
     return (
         <form onSubmit = {handleSubmit(onSubmit)}>

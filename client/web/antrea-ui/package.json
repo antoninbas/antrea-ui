@@ -47,7 +47,13 @@
     "extends": [
       "react-app",
       "react-app/jest"
-    ]
+    ],
+    "rules": {
+      "semi": [
+        "warn",
+        "always"
+      ]
+    }
   },
   "browserslist": {
     "production": [

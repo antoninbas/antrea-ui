@@ -1,5 +1,5 @@
-import api from './axios'
-import { APIError, handleError } from './common'
+import api from './axios';
+import { APIError, handleError } from './common';
 import config from '../config';
 
 const { apiServer } = config;
@@ -89,7 +89,7 @@ export const traceflowAPI = {
                     "Content-Type": "application/json",
                 },
                 validateStatus: (status: number) => status === 202,
-            })
+            });
 
             for (let i = 0; i < 10; i++) {
                 let location = response.headers["location"] ?? "";
@@ -104,16 +104,16 @@ export const traceflowAPI = {
                     if (withDelete) {
                         await api.delete(`${response.request.responseURL}`, {
                             validateStatus: (status: number) => status === 200,
-                        }).then(_ => console.log("Traceflow deleted successfully")).catch(_ => console.error("Unable to delete traceflow"))
+                        }).then(_ => console.log("Traceflow deleted successfully")).catch(_ => console.error("Unable to delete traceflow"));
                     }
-                    const tf = response.data as Traceflow
-                    return tf.status
+                    const tf = response.data as Traceflow;
+                    return tf.status;
                 }
             }
-            throw new APIError(0, "", "Timeout when waiting for traceflow request to complete")
+            throw new APIError(0, "", "Timeout when waiting for traceflow request to complete");
         } catch(err) {
             console.error("Unable to run traceflow");
-            handleError(err as Error)
+            handleError(err as Error);
         }
     }
-}
+};

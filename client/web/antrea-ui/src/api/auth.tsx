@@ -1,5 +1,5 @@
-import axios from 'axios'
-import { handleError } from './common'
+import axios from 'axios';
+import { handleError } from './common';
 import { encode } from 'base-64';
 import { setToken } from './token';
 import config from '../config';
@@ -24,23 +24,23 @@ export const authAPI = {
             headers: {
                 "Authorization": "Basic " + encode(username + ":" + password),
             },
-        }).then((response) => response.data as Token).catch(error => handleError(error, "Error when trying to log in"))
+        }).then((response) => response.data as Token).catch(error => handleError(error, "Error when trying to log in"));
     },
 
     logout: async (): Promise<void> => {
-        return api.get(`auth/logout`).then(_ => {}).catch((error) => handleError(error, "Error when trying to log out"))
+        return api.get(`auth/logout`).then(_ => {}).catch((error) => handleError(error, "Error when trying to log out"));
     },
 
     refreshToken: async (): Promise<void> => {
         return api.get(`auth/refresh_token`).then((response) => {
-            setToken((response.data as Token).accessToken)
+            setToken((response.data as Token).accessToken);
         }).catch((error) => {
             if (error.response?.status === 401) {
                 // resetting token, this will "redirect" the user to the login screen
-                setToken("")
+                setToken("");
             } else {
-                handleError(error)
+                handleError(error);
             }
-        })
+        });
     },
-}
+};

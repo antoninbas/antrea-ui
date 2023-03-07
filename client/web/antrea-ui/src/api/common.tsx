@@ -1,4 +1,4 @@
-import { AxiosError } from 'axios'
+import { AxiosError } from 'axios';
 
 export class APIError extends Error {
     code: number;
@@ -17,7 +17,7 @@ export class APIError extends Error {
         this.code = code;
         this.status = status;
         this.date = new Date();
-        this.message = `${this.message} (${this.code}, ${this.status})`
+        this.message = `${this.message} (${this.code}, ${this.status})`;
     }
 }
 
@@ -26,12 +26,12 @@ export function handleError(error: Error, message?: string) : never {
         if (error.response) {
             let errorMessage = "Error processing request.";
             if (error.response.data) {
-                errorMessage = JSON.stringify(error.response.data)
+                errorMessage = JSON.stringify(error.response.data);
             } else if (message) {
-                errorMessage = message
+                errorMessage = message;
             }
             throw new APIError(error.response.status, error.response.statusText, errorMessage);
         }
     }
-    throw error
+    throw error;
 }
