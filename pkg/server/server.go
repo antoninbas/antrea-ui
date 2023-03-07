@@ -1,7 +1,6 @@
 package server
 
 import (
-	"database/sql"
 	"net/http"
 	"strings"
 
@@ -16,7 +15,6 @@ import (
 
 type server struct {
 	logger                   logr.Logger
-	db                       *sql.DB
 	k8sClient                dynamic.Interface
 	traceflowRequestsHandler traceflowhandler.RequestsHandler
 	passwordStore            password.Store
@@ -38,7 +36,6 @@ func SetCookieSecure(v bool) ServerOptions {
 
 func NewServer(
 	logger logr.Logger,
-	db *sql.DB,
 	k8sClient dynamic.Interface,
 	traceflowRequestsHandler traceflowhandler.RequestsHandler,
 	passwordStore password.Store,
@@ -51,7 +48,6 @@ func NewServer(
 	}
 	return &server{
 		logger:                   logger,
-		db:                       db,
 		k8sClient:                k8sClient,
 		traceflowRequestsHandler: traceflowRequestsHandler,
 		passwordStore:            passwordStore,
@@ -96,8 +92,6 @@ func (s *server) AddRoutes(router *gin.Engine) {
 		c.Status(http.StatusOK)
 	})
 	apiv1 := router.Group("/api/v1")
-	s.AddQueryRoutes(apiv1)
-	s.AddVariablesRoutes(apiv1)
 	s.AddTraceflowRoutes(apiv1)
 	s.AddInfoRoutes(apiv1)
 	s.AddAccountRoutes(apiv1)

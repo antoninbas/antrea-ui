@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"database/sql"
 	"flag"
 	"fmt"
 	"net/http"
@@ -34,8 +33,6 @@ var (
 )
 
 func run() error {
-	var db *sql.DB
-
 	k8sClient, err := k8s.DynamicClient()
 	if err != nil {
 		return fmt.Errorf("failed to create K8s dynamic client: %w", err)
@@ -51,7 +48,6 @@ func run() error {
 
 	s := server.NewServer(
 		logger,
-		db,
 		k8sClient,
 		traceflowHandler,
 		passwordStore,
