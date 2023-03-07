@@ -1,6 +1,6 @@
 # antrea-ui
 
-![Version: ](https://img.shields.io/badge/Version--informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: latest](https://img.shields.io/badge/AppVersion-latest-informational?style=flat-square)
+![Version: 0.1.0-dev](https://img.shields.io/badge/Version-0.1.0--dev-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: latest](https://img.shields.io/badge/AppVersion-latest-informational?style=flat-square)
 
 Web UI for the Antrea Kubernetes network plugin
 
@@ -35,6 +35,8 @@ Kubernetes: `>= 1.16.0-0`
 | https.auto.ipAddresses | list | `[]` | IP addresses to use in the certificate. |
 | https.enabled | bool | `false` | Enable HTTPS (only) for accessing the web UI. |
 | https.method | string | `"auto"` | Method for generating the TLS certificate for the web server. At the moment, only "auto" is supported, which means that Helm will generate a new self-signed certificate every time the template function is executed. |
+| ipv6 | object | `{"enabled":true}` | IPv6 configuration for the Antrea UI. |
+| ipv6.enabled | bool | `true` | Enable IPv6 for accessing the web UI. Even if the cluster does not support IPv6, you do not typically need to set this value to false. |
 | nodeSelector | object | `{"kubernetes.io/os":"linux"}` | Node selector for the Antrea UI Pod. |
 | service | object | `{"nodePort":31234,"port":3000,"type":"ClusterIP"}` | Configuration for the Antrea UI Service. |
 | service.nodePort | int | `31234` | - The Node port to use when the Service type is NodePort. |

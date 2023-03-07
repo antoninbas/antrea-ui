@@ -3,8 +3,14 @@
 server {
     {{- if .Values.https.enabled }}
     listen       {{ $port }} ssl;
+    {{- if .Values.ipv6.enabled }}
+    listen       [::]:{{ $port }} ssl;
+    {{- end }}
     {{- else }}
     listen       {{ $port }};
+    {{- if .Values.ipv6.enabled }}
+    listen       [::]:{{ $port }};
+    {{- end }}
     {{- end }}
     server_name _;
     root /app;

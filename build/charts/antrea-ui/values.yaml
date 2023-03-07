@@ -42,6 +42,12 @@ https:
     # this method.
     daysValid: 365
 
+# -- IPv6 configuration for the Antrea UI.
+ipv6:
+  # -- Enable IPv6 for accessing the web UI. Even if the cluster does not support IPv6, you do not
+  # typically need to set this value to false.
+  enabled: true
+
 # -- Configuration for the Antrea UI Service.
 service:
   # --- The type of Service used for Antrea UI access, either ClusterIP or NodePort.
