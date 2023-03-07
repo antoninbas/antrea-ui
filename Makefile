@@ -1,7 +1,7 @@
 GO                 ?= go
 BINDIR := $(CURDIR)/bin
 
-all: bin
+all: build
 
 .PHONY: bin
 bin:
@@ -30,3 +30,8 @@ golangci-fix: .golangci-bin
 clean:
 	rm -rf bin
 	rm -rf .golangci-bin
+
+.PHONY: build
+build:
+	docker build -t antrea/antrea-ui-frontend -f build/Dockerfile.frontend .
+	docker build -t antrea/antrea-ui-backend -f build/Dockerfile.backend .

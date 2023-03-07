@@ -1,4 +1,4 @@
-const apiServer = "http://localhost:8080";
+const apiServer = process.env.API_SERVER || "";
 const apiVersion = "v1";
 
 const config = {

@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"path/filepath"
 	"time"
 
 	"github.com/gin-contrib/cors"
@@ -15,12 +14,11 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/go-logr/zapr"
 	"go.uber.org/zap"
-	"k8s.io/client-go/dynamic"
-	"k8s.io/client-go/tools/clientcmd"
-	"k8s.io/client-go/util/homedir"
 
 	"antrea.io/antrea-ui/pkg/auth"
+	"antrea.io/antrea-ui/pkg/env"
 	traceflowhandler "antrea.io/antrea-ui/pkg/handlers/traceflow"
+	"antrea.io/antrea-ui/pkg/k8s"
 	"antrea.io/antrea-ui/pkg/password"
 	passwordhasher "antrea.io/antrea-ui/pkg/password/hasher"
 	passwordrw "antrea.io/antrea-ui/pkg/password/readwriter"
@@ -29,42 +27,39 @@ import (
 )
 
 var (
-	serverAddr     string
-	logger         logr.Logger
-	kubeconfig     *string
-	privateKeyPath string
+	serverAddr string
+	logger     logr.Logger
+	jwtKeyPath string
 )
 
 func run() error {
 	var db *sql.DB
 
-	k8sConfig, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
+	k8sClient, err := k8s.DynamicClient()
 	if err != nil {
-		return err
-	}
-	k8sClient, err := dynamic.NewForConfig(k8sConfig)
-	if err != nil {
-		return err
+		return fmt.Errorf("failed to create K8s dynamic client: %w", err)
 	}
 
 	traceflowHandler := traceflowhandler.NewRequestsHandler(logger, k8sClient)
 	// passwordStore := password.NewStore(passwordrw.NewInMemory(), passwordhasher.NewArgon2id())
-	passwordStore := password.NewStore(passwordrw.NewK8sSecret("default", "antrea-ui-passwd", k8sClient), passwordhasher.NewArgon2id())
+	passwordStore := password.NewStore(passwordrw.NewK8sSecret(env.GetNamespace(), "antrea-ui-passwd", k8sClient), passwordhasher.NewArgon2id())
 	if err := passwordStore.Init(context.Background()); err != nil {
 		return err
 	}
-	tokenManager := auth.NewTokenManager("key", auth.LoadPrivateKeyOrDie(privateKeyPath))
+	tokenManager := auth.NewTokenManager("key", auth.LoadPrivateKeyOrDie(jwtKeyPath))
 
 	s := server.NewServer(logger, db, k8sClient, traceflowHandler, passwordStore, tokenManager)
+	if env.IsProductionEnv() {
+		gin.SetMode(gin.ReleaseMode)
+	}
 	router := gin.Default()
-	// TODO(antonin): CHANGEME
-	// This is for testing, it should be configurable
-	corsConfig := cors.DefaultConfig()
-	// corsConfig.AllowAllOrigins = true
-	corsConfig.AllowOrigins = []string{"http://localhost:3000"}
-	corsConfig.AddAllowHeaders("Authorization")
-	corsConfig.AllowCredentials = true
-	router.Use(cors.New(corsConfig))
+	if !env.IsProductionEnv() {
+		corsConfig := cors.DefaultConfig()
+		corsConfig.AllowOrigins = []string{"http://localhost:3000"}
+		corsConfig.AddAllowHeaders("Authorization")
+		corsConfig.AllowCredentials = true
+		router.Use(cors.New(corsConfig))
+	}
 	s.AddRoutes(router)
 
 	srv := &http.Server{
@@ -102,16 +97,13 @@ func run() error {
 
 func main() {
 	flag.StringVar(&serverAddr, "addr", ":8080", "Listening address for server")
-	if home := homedir.HomeDir(); home != "" {
-		kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
-	} else {
-		kubeconfig = flag.String("kubeconfig", "", "absolute path to the kubeconfig file")
-	}
-	flag.StringVar(&privateKeyPath, "private-key", "", "Path to PEM private key file")
+	flag.StringVar(&jwtKeyPath, "jwt-key", "", "Path to PEM private key file to generate JWT tokens")
 	flag.Parse()
 
 	zc := zap.NewProductionConfig()
-	zc.Level = zap.NewAtomicLevelAt(zap.DebugLevel)
+	if !env.IsProductionEnv() {
+		zc.Level = zap.NewAtomicLevelAt(zap.DebugLevel)
+	}
 	zc.DisableStacktrace = true
 	zapLog, err := zc.Build()
 	if err != nil {

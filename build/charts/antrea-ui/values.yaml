@@ -1,0 +1,32 @@
+frontend:
+  image:
+    repository: "antrea/antrea-ui-frontend"
+    pullPolicy: "IfNotPresent"
+    tag: ""
+  port: 3000
+  resources: {}
+
+backend:
+  image:
+    repository: "antrea/antrea-ui-backend"
+    pullPolicy: "IfNotPresent"
+    tag: ""
+  port: 8080
+  resources: {}
+
+https:
+  enabled: false
+
+service:
+  # --- The type of service used for Antrea UI access, either ClusterIP or NodePort.
+  type: ClusterIP
+  port: 3000
+  # --- The port to use when the service type is NodePort.
+  nodePort: 31234
+
+nodeSelector:
+  kubernetes.io/os: linux
+
+affinity: {}
+
+tolerations: {}

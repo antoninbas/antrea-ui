@@ -4,6 +4,7 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
+	"fmt"
 	"os"
 )
 
@@ -25,7 +26,7 @@ func LoadPrivateKeyFromFile(filepath string) (*rsa.PrivateKey, error) {
 func LoadPrivateKeyOrDie(filepath string) *rsa.PrivateKey {
 	p, err := LoadPrivateKeyFromFile(filepath)
 	if err != nil {
-		panic("Cannot load PEM data")
+		panic(fmt.Sprintf("Cannot load PEM data: %v", err))
 	}
 	return p
 }

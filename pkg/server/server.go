@@ -73,6 +73,9 @@ func (s *server) checkBearerToken(c *gin.Context) {
 }
 
 func (s *server) AddRoutes(router *gin.Engine) {
+	router.GET("/healthz", func(c *gin.Context) {
+		c.Status(http.StatusOK)
+	})
 	apiv1 := router.Group("/api/v1")
 	s.AddQueryRoutes(apiv1)
 	s.AddVariablesRoutes(apiv1)
