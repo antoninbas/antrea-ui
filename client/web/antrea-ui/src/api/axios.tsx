@@ -1,7 +1,7 @@
 import axios, { AxiosError } from 'axios';
 import createAuthRefreshInterceptor from 'axios-auth-refresh';
 import config from '../config';
-import { getToken, setToken } from './token';
+import { getToken } from './token';
 import { authAPI } from './auth';
 
 const { apiUri } = config;

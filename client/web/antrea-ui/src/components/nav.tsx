@@ -1,35 +1,34 @@
-import React, { useLayoutEffect, useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { Link } from "react-router-dom";
 import { CdsNavigation, CdsNavigationStart, CdsNavigationItem } from "@cds/react/navigation";
 import { CdsIcon } from '@cds/react/icon';
 import {
     ClarityIcons,
-    cloudIcon, cloudIconName,
+    // cloudIcon, cloudIconName,
     cogIcon, cogIconName,
-    containerIcon, containerIconName,
+    // containerIcon, containerIconName,
     dashboardIcon, dashboardIconName,
-    powerIcon, powerIconName,
-    userIcon, userIconName,
-    eyeIcon, eyeIconName,
+    // powerIcon, powerIconName,
+    // userIcon, userIconName,
+    // eyeIcon, eyeIconName,
     bugIcon, bugIconName,
-    firewallIcon, firewallIconName,
+    // firewallIcon, firewallIconName,
  } from '@cds/core/icon';
 
 ClarityIcons.addIcons(
-    cloudIcon,
+    // cloudIcon,
     cogIcon,
-    containerIcon,
+    // containerIcon,
     dashboardIcon,
-    powerIcon,
-    userIcon,
-    eyeIcon,
+    // powerIcon,
+    // userIcon,
+    // eyeIcon,
     bugIcon,
-    firewallIcon,
+    // firewallIcon,
 )
 
 export default function NavTab() {
-    const [navigationOpen, setNavigationOpen] = useState(true);
-    // const [navigationGroupOpen] = useState(true);
+    const [navigationOpen, setNavigationOpen] = useState<boolean>(true);
 
     return (
         <CdsNavigation expanded={navigationOpen}>

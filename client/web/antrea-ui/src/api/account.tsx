@@ -1,6 +1,5 @@
 import api from './axios'
 import { handleError } from './common'
-import { getToken } from './token'
 import { encode } from 'base-64';
 
 export const accountAPI = {

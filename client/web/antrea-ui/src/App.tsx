@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef} from 'react';
+import React, { useEffect } from 'react';
 import logo from './logo.svg';
 import './App.css'
-import { Outlet, Link, useNavigate } from "react-router-dom";
+import { Outlet, Link } from "react-router-dom";
 import NavTab from './components/nav';
 import Login from './components/login';
 import { useLogout} from './components/logout';
@@ -52,7 +52,7 @@ function LoginWall(props: React.PropsWithChildren) {
 }
 
 function Logout() {
-    const [logoutComplete, logout] = useLogout();
+    const [, logout] = useLogout();
 
     return (
         <div cds-layout="vertical p:md gap:md">

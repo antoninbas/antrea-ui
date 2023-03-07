@@ -1,10 +1,12 @@
 import { useForm, SubmitHandler } from "react-hook-form";
+import { ErrorMessage } from '@hookform/error-message';
 import { CdsButton } from '@cds/react/button';
 import { CdsFormGroup } from '@cds/react/forms';
 import { CdsInput } from "@cds/react/input";
 import { CdsPassword } from "@cds/react/password";
 import { authAPI } from '../api/auth';
-import { useAPIError} from '../components/errors';
+import { useAPIError} from './errors';
+import { ErrorMessageContainer } from './form-errors';
 
 type Inputs = {
     username: string
@@ -12,9 +14,9 @@ type Inputs = {
 };
 
 export default function Login(props: { setToken: (token: string) => void }) {
-    const { register, handleSubmit, reset, formState: { errors } } = useForm<Inputs>();
+    const { register, handleSubmit, formState: { errors } } = useForm<Inputs>();
     const setToken = props.setToken;
-    const { addError, removeError } = useAPIError();
+    const { addError } = useAPIError();
 
     const onSubmit: SubmitHandler<Inputs> = async data => {
         try {
@@ -31,12 +33,26 @@ export default function Login(props: { setToken: (token: string) => void }) {
             <CdsFormGroup layout="horizontal">
                 <CdsInput>
                     <label>Username</label>
-                    <input {...register("username")} defaultValue="admin" />
+                    <input {...register("username", {
+                        required: "Required field",
+                    })} defaultValue="admin" />
                 </CdsInput>
+                <ErrorMessage
+                    errors={errors}
+                    name="username"
+                    as={<ErrorMessageContainer />}
+                />
                 <CdsPassword>
                     <label>Password</label>
-                    <input type="password" {...register("password")} />
+                    <input type="password" {...register("password", {
+                        required: "Required field",
+                    })} />
                 </CdsPassword>
+                <ErrorMessage
+                    errors={errors}
+                    name="password"
+                    as={<ErrorMessageContainer />}
+                />
                 <CdsButton type="submit">Login</CdsButton>
             </CdsFormGroup>
         </form>

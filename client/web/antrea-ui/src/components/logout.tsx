@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useRef} from 'react';
+import { useState } from 'react';
 import { useNavigate } from "react-router-dom";
 import { authAPI } from '../api/auth';
-import { Provider, useSelector, useDispatch } from 'react-redux'
-import { store, setToken } from '../store'
+import { useDispatch } from 'react-redux'
+import { setToken } from '../store'
 
 export function useLogout(): [boolean, (() => Promise<void>)] {
     const navigate = useNavigate();

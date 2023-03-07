@@ -10,7 +10,7 @@ import { CdsSelect } from '@cds/react/select';
 import { ErrorMessage } from '@hookform/error-message';
 import { ErrorMessageContainer } from '../components/form-errors';
 import {isIP, isIPv4} from 'is-ip';
-import {TraceflowPacket, TraceflowSpec, TraceflowStatus, traceflowAPI} from '../api/traceflow';
+import {TraceflowPacket, TraceflowSpec, traceflowAPI} from '../api/traceflow';
 import { APIError } from '../api/common';
 import { useAPIError} from '../components/errors';
 
@@ -78,8 +78,8 @@ function createTraceflowRequest(inputs: Inputs): TraceflowSpec {
                 break
             }
             case "IPv4": {
-                if (!isIP(inputs.dst)) {
-                    throw "Invalid destination IP address"
+                if (!isIPv4(inputs.dst)) {
+                    throw new Error("Invalid destination IP address")
                 }
                 spec.destination.ip = inputs.dst
             }
@@ -121,7 +121,7 @@ export default function Traceflow() {
         try {
             const tfStatus = await traceflowAPI.runTraceflow(tf, true)
             if (tfStatus === undefined) {
-                throw "missing Traceflow status"
+                throw new Error("missing Traceflow status")
             }
             navigate(`/traceflow/result`, {
                 state: {

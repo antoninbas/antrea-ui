@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useRef} from 'react';
+import React, { useEffect, useRef} from 'react';
 import { useLocation } from "react-router-dom";
 import { TraceflowSpec, TraceflowStatus, TraceflowNodeResult, TraceflowObservation } from '../api/traceflow';
+// eslint-disable-next-line
 import * as d3 from 'd3';
 import { graphviz } from "d3-graphviz";
 import { CdsAlertGroup, CdsAlert } from "@cds/react/alert";
@@ -163,15 +164,15 @@ function TraceflowGraph(props: {spec: TraceflowSpec, status: TraceflowStatus}) {
     const tfStatus = props.status
     const divRef = useRef<HTMLDivElement>(null)
 
-    const darkRed = `"#B20000"`
-    const mistyRose = `"#EDD5D5"`
-    const fireBrick = `"#B22222"`
+    // const darkRed = `"#B20000"`
+    // const mistyRose = `"#EDD5D5"`
+    // const fireBrick = `"#B22222"`
     const ghostWhite = `"#F8F8FF"`
-    const gainsboro = `"#DCDCDC"`
+    // const gainsboro = `"#DCDCDC"`
     const lightGrey = `"#C8C8C8"`
-    const silver = `"#C0C0C0"`
+    // const silver = `"#C0C0C0"`
     const grey = `"#808080"`
-    const dimGrey = `"#696969"`
+    // const dimGrey = `"#696969"`
 
     useEffect(() => {
         renderGraph(buildGraph())
@@ -300,7 +301,6 @@ export interface TraceflowResultState {
 }
 
 function TraceflowFailure(props: {spec: TraceflowSpec, status: TraceflowStatus}) {
-    const tfSpec = props.spec
     const tfStatus = props.status
 
     return (

@@ -3,7 +3,6 @@ import { CdsCard } from '@cds/react/card';
 import { CdsDivider } from '@cds/react/divider';
 import { CdsButton } from '@cds/react/button';
 import { CdsFormGroup } from '@cds/react/forms';
-import { CdsInput } from "@cds/react/input";
 import { CdsPassword } from "@cds/react/password";
 import { ErrorMessage } from '@hookform/error-message';
 import { ErrorMessageContainer } from '../components/form-errors';
@@ -18,11 +17,11 @@ type Inputs = {
 };
 
 function UpdatePassword() {
-    const { register, watch, handleSubmit, reset, formState: { errors } } = useForm<Inputs>();
+    const { register, watch, handleSubmit, formState: { errors } } = useForm<Inputs>();
 
-    const [logoutComplete, logout] = useLogout();
+    const [, logout] = useLogout();
 
-    const { addError, removeError } = useAPIError();
+    const { addError } = useAPIError();
 
     const onSubmit: SubmitHandler<Inputs> = async data => {
         try {
@@ -71,7 +70,7 @@ function UpdatePassword() {
                             <input type="password" {...register("newPassword2", {
                                 required: "Required field",
                                 validate: (value: string) => {
-                                    if (value != watch("newPassword")) {
+                                    if (value !== watch("newPassword")) {
                                         return "Passwords don't match"
                                     }
                                 },

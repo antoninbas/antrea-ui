@@ -1,9 +1,7 @@
 import React, { useState, useEffect} from 'react';
-import { useNavigate } from "react-router-dom";
 import { CdsCard } from '@cds/react/card';
 import { CdsDivider } from '@cds/react/divider';
 import { AgentInfo, ControllerInfo, K8sRef, agentInfoAPI, controllerInfoAPI } from '../api/info';
-import { APIError } from '../api/common';
 import { useAPIError} from '../components/errors';
 import { WaitForAPIResource } from '../components/progress';
 

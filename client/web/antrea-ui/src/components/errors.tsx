@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useContext } from 'react';
+import React, { useState, useCallback, useContext } from 'react';
 import { CdsAlertGroup, CdsAlert } from "@cds/react/alert";
 
 interface APIErrorContextType {
