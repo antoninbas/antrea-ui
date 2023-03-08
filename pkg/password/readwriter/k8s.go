@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"sync"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -12,40 +11,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic"
 )
-
-type Interface interface {
-	Read(ctx context.Context) (bool, []byte, []byte, error)
-	Write(ctx context.Context, hash []byte, salt []byte) error
-}
-
-type InMemory struct {
-	sync.Mutex
-	set  bool
-	hash []byte
-	salt []byte
-}
-
-func (rw *InMemory) Read(ctx context.Context) (bool, []byte, []byte, error) {
-	rw.Lock()
-	defer rw.Unlock()
-	if !rw.set {
-		return false, nil, nil, nil
-	}
-	return true, rw.hash, rw.salt, nil
-}
-
-func (rw *InMemory) Write(ctx context.Context, hash []byte, salt []byte) error {
-	rw.Lock()
-	defer rw.Unlock()
-	rw.hash = hash
-	rw.salt = salt
-	rw.set = true
-	return nil
-}
-
-func NewInMemory() *InMemory {
-	return &InMemory{}
-}
 
 var (
 	k8sSecretGVR = schema.GroupVersionResource{

@@ -4,10 +4,6 @@ import (
 	"golang.org/x/crypto/argon2"
 )
 
-type Interface interface {
-	Hash(password []byte, salt []byte) ([]byte, error)
-}
-
 type Argon2id struct {
 	time    uint32
 	memory  uint32

@@ -31,9 +31,10 @@ creds/
 
 __pycache__/
 
-.tenant_uuid
-
 *.bak
 *.bkp
 
 *.pem
+
+.mockgen-bin
+.golangci-bin

@@ -11,7 +11,10 @@ import (
 	"antrea.io/antrea-ui/pkg/password/readwriter"
 )
 
-const defaultPassword = "admin"
+const (
+	defaultPassword = "admin"
+	saltLength      = 16
+)
 
 var (
 	NotInitializedErr  = fmt.Errorf("not initialized")
@@ -24,7 +27,7 @@ type Store interface {
 }
 
 type store struct {
-	sync.Mutex
+	sync.RWMutex
 	cachedSalt []byte
 	cachedHash []byte
 	rw         readwriter.Interface
@@ -50,7 +53,7 @@ func (s *store) Init(ctx context.Context) error {
 		s.cachedHash = hash
 		return nil
 	}
-	salt = make([]byte, 16)
+	salt = make([]byte, saltLength)
 	if _, err := rand.Read(salt); err != nil {
 		return fmt.Errorf("error when generation random salt: %w", err)
 	}
@@ -76,14 +79,16 @@ func (s *store) Update(ctx context.Context, password []byte) error {
 	if err != nil {
 		return err
 	}
+	if err := s.rw.Write(ctx, hash, s.cachedSalt); err != nil {
+		return err
+	}
 	s.cachedHash = hash
 	return nil
 }
 
 func (s *store) Compare(ctx context.Context, password []byte) error {
-	// TODO: better lock granularity
-	s.Lock()
-	defer s.Unlock()
+	s.RLock()
+	defer s.RUnlock()
 	if s.cachedSalt == nil {
 		return NotInitializedErr
 	}
