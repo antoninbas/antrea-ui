@@ -92,6 +92,15 @@ func (rw *K8sSecret) Write(ctx context.Context, hash []byte, salt []byte) error 
 	if err != nil {
 		return err
 	}
+	hashS := base64.StdEncoding.EncodeToString(hash)
+	saltS := base64.StdEncoding.EncodeToString(salt)
+	data := map[string]interface{}{
+		// using hash and salt directly seems to work with the
+		// regular client, but not with the fake client (used for
+		// unit tests)
+		"hash": hashS,
+		"salt": saltS,
+	}
 	if !ok {
 		// create
 		secret := &unstructured.Unstructured{
@@ -102,10 +111,7 @@ func (rw *K8sSecret) Write(ctx context.Context, hash []byte, salt []byte) error 
 					"namespace": rw.secretNamespace,
 					"name":      rw.secretName,
 				},
-				"data": map[string][]byte{
-					"hash": hash,
-					"salt": salt,
-				},
+				"data": data,
 			},
 		}
 		if _, err := rw.k8sClient.Resource(k8sSecretGVR).Namespace(rw.secretNamespace).Create(ctx, secret, metav1.CreateOptions{}); err != nil {
@@ -114,6 +120,7 @@ func (rw *K8sSecret) Write(ctx context.Context, hash []byte, salt []byte) error 
 		return nil
 	}
 	// update
+	secret.Object["data"] = data
 	if _, err := rw.k8sClient.Resource(k8sSecretGVR).Namespace(rw.secretNamespace).Update(ctx, secret, metav1.UpdateOptions{}); err != nil {
 		// we do not handle update conflicts, as we should be the only writer
 		return fmt.Errorf("error when updating K8s secret '%s/%s': %w", rw.secretNamespace, rw.secretName, err)
