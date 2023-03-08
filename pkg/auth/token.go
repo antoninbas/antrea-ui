@@ -6,14 +6,16 @@ import (
 	"sync"
 	"time"
 
-	"github.com/golang-jwt/jwt"
+	"github.com/golang-jwt/jwt/v5"
 	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/utils/clock"
 )
 
 const (
 	Issuer               = "ui.antrea.io"
 	tokenLifetime        = 10 * time.Minute
 	refreshTokenLifetime = 24 * time.Hour
+	refreshTokenGCPeriod = 1 * time.Minute
 )
 
 type Token struct {
@@ -36,19 +38,25 @@ type tokenManager struct {
 	SigningMethod      jwt.SigningMethod
 	refreshTokensMutex sync.RWMutex
 	refreshTokens      map[string]time.Time
+	clock              clock.Clock
 }
 
 type JWTAccessClaims struct {
-	jwt.StandardClaims
+	jwt.RegisteredClaims
 }
 
-func NewTokenManager(keyID string, key *rsa.PrivateKey) *tokenManager {
+func newTokenManagerWithClock(keyID string, key *rsa.PrivateKey, clock clock.Clock) *tokenManager {
 	return &tokenManager{
 		SigningKeyID:  keyID,
 		SigningKey:    key,
 		SigningMethod: jwt.SigningMethodRS512,
 		refreshTokens: make(map[string]time.Time),
+		clock:         clock,
 	}
+}
+
+func NewTokenManager(keyID string, key *rsa.PrivateKey) *tokenManager {
+	return newTokenManagerWithClock(keyID, key, &clock.RealClock{})
 }
 
 func (m *tokenManager) Run(stopCh <-chan struct{}) {
@@ -57,13 +65,13 @@ func (m *tokenManager) Run(stopCh <-chan struct{}) {
 }
 
 func (m *tokenManager) getToken(expiresIn time.Duration) (*Token, error) {
-	createdAt := time.Now()
+	createdAt := m.clock.Now()
 	expiresAt := createdAt.Add(expiresIn)
 	claims := &JWTAccessClaims{
-		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: expiresAt.Unix(),
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(expiresAt),
 			Issuer:    Issuer,
-			IssuedAt:  createdAt.Unix(),
+			IssuedAt:  jwt.NewNumericDate(createdAt),
 		},
 	}
 
@@ -99,9 +107,13 @@ func (m *tokenManager) GetRefreshToken() (*Token, error) {
 }
 
 func (m *tokenManager) verifyToken(rawToken string) error {
-	_, err := jwt.Parse(rawToken, func(token *jwt.Token) (interface{}, error) {
-		return &m.SigningKey.PublicKey, nil
-	})
+	_, err := jwt.Parse(
+		rawToken,
+		func(token *jwt.Token) (interface{}, error) {
+			return &m.SigningKey.PublicKey, nil
+		},
+		jwt.WithTimeFunc(m.clock.Now),
+	)
 	if err != nil {
 		return err
 	}
@@ -133,7 +145,7 @@ func (m *tokenManager) DeleteRefreshToken(rawToken string) {
 func (m *tokenManager) doRefreshTokenGC() {
 	expiredTokens := func() []string {
 		tokens := make([]string, 0)
-		now := time.Now()
+		now := m.clock.Now()
 		m.refreshTokensMutex.RLock()
 		defer m.refreshTokensMutex.RUnlock()
 		for token, expiresAt := range m.refreshTokens {
@@ -159,5 +171,5 @@ func (m *tokenManager) doRefreshTokenGC() {
 }
 
 func (m *tokenManager) runRefreshTokenGC(stopCh <-chan struct{}) {
-	wait.Until(m.doRefreshTokenGC, 1*time.Minute, stopCh)
+	wait.BackoffUntil(m.doRefreshTokenGC, wait.NewJitteredBackoffManager(refreshTokenGCPeriod, 0.0, m.clock), true, stopCh)
 }
