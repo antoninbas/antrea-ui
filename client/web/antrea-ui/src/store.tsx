@@ -1,4 +1,4 @@
-import { configureStore, createSlice, PayloadAction } from '@reduxjs/toolkit'
+import { configureStore, createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 interface state {
     // if token is undefined: we do not have a token in memory but we may have a
@@ -12,23 +12,23 @@ interface state {
 
 const initialState = {
     token: undefined,
-} as state
+} as state;
 
 const authSlice = createSlice({
     name: 'auth',
     initialState: initialState,
     reducers: {
         setToken(state, action: PayloadAction<string | undefined>) {
-            state.token = action.payload
+            state.token = action.payload;
         }
     }
-})
+});
 
 export const store = configureStore({
     reducer: authSlice.reducer,
-})
+});
 
-export const { setToken } = authSlice.actions
+export const { setToken } = authSlice.actions;
 
 // Infer the `RootState` and `AppDispatch` types from the store itself
 export type RootState = ReturnType<typeof store.getState>

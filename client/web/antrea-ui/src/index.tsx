@@ -2,10 +2,10 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
-import Summary from './routes/summary'
-import Traceflow from './routes/traceflow'
-import TraceflowResult from './routes/traceflowresult'
-import Settings from './routes/settings'
+import Summary from './routes/summary';
+import Traceflow from './routes/traceflow';
+import TraceflowResult from './routes/traceflowresult';
+import Settings from './routes/settings';
 import reportWebVitals from './reportWebVitals';
 import {
   createBrowserRouter,

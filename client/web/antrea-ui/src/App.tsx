@@ -1,25 +1,25 @@
 import React, { useEffect } from 'react';
 import logo from './logo.svg';
-import './App.css'
+import './App.css';
 import { Outlet, Link } from "react-router-dom";
 import NavTab from './components/nav';
 import Login from './components/login';
 import { useLogout} from './components/logout';
 import { CdsButton } from '@cds/react/button';
 import { APIErrorProvider, APIErrorNotification } from './components/errors';
-import { Provider, useSelector, useDispatch } from 'react-redux'
-import type { RootState } from './store'
-import { store, setToken } from './store'
-import { authAPI } from './api/auth'
+import { Provider, useSelector, useDispatch } from 'react-redux';
+import type { RootState } from './store';
+import { store, setToken } from './store';
+import { authAPI } from './api/auth';
 
 function LoginWall(props: React.PropsWithChildren) {
-    const token = useSelector((state: RootState) => state.token)
-    const dispatch = useDispatch()
+    const token = useSelector((state: RootState) => state.token);
+    const dispatch = useDispatch();
 
     useEffect(() => {
         async function refreshToken() {
             try {
-                await authAPI.refreshToken()
+                await authAPI.refreshToken();
             } catch (error) {
                 // ignore error
             }
@@ -27,12 +27,12 @@ function LoginWall(props: React.PropsWithChildren) {
 
         if (token === undefined) {
             // try a refresh
-            refreshToken()
+            refreshToken();
         }
-    }, [token])
+    }, [token]);
 
     function doSetToken(token: string) {
-        dispatch(setToken(token))
+        dispatch(setToken(token));
     }
 
     if (!token) {
@@ -41,7 +41,7 @@ function LoginWall(props: React.PropsWithChildren) {
                 <p cds-text="section" >Please log in</p>
                 <Login setToken={doSetToken} />
             </div>
-        )
+        );
     }
 
     return (
@@ -58,7 +58,7 @@ function Logout() {
         <div cds-layout="vertical p:md gap:md">
             <CdsButton type="button" action="outline" onClick={()=> { logout(); }}>Logout</CdsButton>
         </div>
-    )
+    );
 }
 
 function App() {
