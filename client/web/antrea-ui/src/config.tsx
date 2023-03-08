@@ -1,4 +1,4 @@
-const apiServer = process.env.API_SERVER || "";
+const apiServer = process.env.REACT_APP_API_SERVER || "";
 const apiVersion = "v1";
 
 const config = {
