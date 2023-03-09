@@ -14,10 +14,12 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/dynamic"
+	"k8s.io/utils/clock"
 )
 
 const (
 	traceflowExpiryTimeout = 60 * time.Minute
+	gcPeriod               = 1 * time.Minute
 )
 
 var (
@@ -31,13 +33,19 @@ var (
 type requestsHandler struct {
 	logger    logr.Logger
 	k8sClient dynamic.Interface
+	clock     clock.Clock
 }
 
-func NewRequestsHandler(logger logr.Logger, k8sClient dynamic.Interface) *requestsHandler {
+func newRequestsHandlerWithClock(logger logr.Logger, k8sClient dynamic.Interface, clock clock.Clock) *requestsHandler {
 	return &requestsHandler{
 		logger:    logger,
 		k8sClient: k8sClient,
+		clock:     clock,
 	}
+}
+
+func NewRequestsHandler(logger logr.Logger, k8sClient dynamic.Interface) *requestsHandler {
+	return newRequestsHandlerWithClock(logger, k8sClient, &clock.RealClock{})
 }
 
 func (h *requestsHandler) Run(stopCh <-chan struct{}) {
@@ -105,7 +113,7 @@ func (h *requestsHandler) createTraceflow(ctx context.Context, tfName string, ob
 			"kind":       "Traceflow",
 			"metadata": map[string]interface{}{
 				"name": tfName,
-				"labels": map[string]string{
+				"labels": map[string]interface{}{
 					"ui.antrea.io": "",
 				},
 			},
@@ -130,7 +138,7 @@ func (h *requestsHandler) doGC(ctx context.Context) {
 		return
 	}
 	expiredTraceflows := []string{}
-	now := time.Now()
+	now := h.clock.Now()
 	for _, tf := range list.Items {
 		creationTimestamp := tf.GetCreationTimestamp()
 		if now.Sub(creationTimestamp.Time) > traceflowExpiryTimeout {
@@ -145,8 +153,10 @@ func (h *requestsHandler) doGC(ctx context.Context) {
 }
 
 func (h *requestsHandler) runGC(stopCh <-chan struct{}) {
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := wait.ContextForChannel(stopCh)
 	defer cancel()
-	go wait.UntilWithContext(ctx, h.doGC, 1*time.Minute)
+	go wait.BackoffUntil(func() {
+		h.doGC(ctx)
+	}, wait.NewJitteredBackoffManager(gcPeriod, 0.0, h.clock), true, stopCh)
 	<-stopCh
 }

@@ -1,95 +1,143 @@
 package traceflow
 
-// import (
-// 	"testing"
-// 	"time"
+import (
+	"context"
+	"testing"
+	"time"
 
-// 	"github.com/go-logr/zapr"
-// 	"github.com/stretchr/testify/assert"
-// 	"github.com/stretchr/testify/require"
-// 	"go.uber.org/zap"
-// 	corev1 "k8s.io/api/core/v1"
-// 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-// 	"k8s.io/apimachinery/pkg/runtime"
-// 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
-// 	"k8s.io/apimachinery/pkg/util/wait"
-// 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
-// 	"sigs.k8s.io/controller-runtime/pkg/client"
-// 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
-// )
+	"github.com/go-logr/logr/testr"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
+	dynamicfake "k8s.io/client-go/dynamic/fake"
+	k8stesting "k8s.io/client-go/testing"
+	"k8s.io/utils/clock"
+	clocktesting "k8s.io/utils/clock/testing"
+)
 
-// var (
-// 	scheme = runtime.NewScheme()
-// )
+func setup(t *testing.T, clock clock.Clock) (*requestsHandler, *dynamicfake.FakeDynamicClient) {
+	logger := testr.New(t)
+	scheme := runtime.NewScheme()
+	scheme.AddKnownTypeWithName(traceflowGVR.GroupVersion().WithKind("TraceflowList"), &unstructured.UnstructuredList{})
+	k8sClient := dynamicfake.NewSimpleDynamicClient(scheme)
+	handler := newRequestsHandlerWithClock(logger, k8sClient, clock)
+	return handler, k8sClient
+}
 
-// func init() {
-// 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
-// }
+func getTraceflow() map[string]interface{} {
+	return map[string]interface{}{
+		"spec": map[string]interface{}{
+			"source": map[string]interface{}{
+				"namespace": "default",
+				"pod":       "podX",
+			},
+			"destination": map[string]interface{}{
+				"namespace": "default",
+				"pod":       "podY",
+			},
+			// we could populate other fields, but it doesn't matter for the tests
+		},
+	}
+}
 
-// type testData struct {
-// 	*testing.T
-// 	stopCh    chan struct{}
-// 	handler   *requestsHandler
-// 	k8sClient client.Client
-// }
+func TestRequestsHandler(t *testing.T) {
+	ctx := context.Background()
 
-// func setUp(t *testing.T, objs ...client.Object) *testData {
-// 	zc := zap.NewDevelopmentConfig()
-// 	zapLog, err := zc.Build()
-// 	require.NoError(t, err)
-// 	logger := zapr.NewLogger(zapLog)
-// 	k8sClient := fake.NewClientBuilder().WithScheme(scheme).WithObjects(objs...).Build()
-// 	handler := NewRequestsHandler(logger, k8sClient)
-// 	stopCh := make(chan struct{})
-// 	go handler.Run(stopCh)
-// 	return &testData{
-// 		T:         t,
-// 		stopCh:    stopCh,
-// 		handler:   handler,
-// 		k8sClient: k8sClient,
-// 	}
-// }
+	testCases := []struct {
+		name  string
+		phase string
+	}{
+		{
+			name:  "success",
+			phase: "Succeeded",
+		},
+		{
+			name:  "failure",
+			phase: "Failed",
+		},
+	}
 
-// func tearDown(t *testData) {
-// 	close(t.stopCh)
-// }
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			h, k8sClient := setup(t, &clock.RealClock{})
+			request := &Request{
+				Object: getTraceflow(),
+			}
 
-// func TestRequestsHandler(t *testing.T) {
-// 	traceflowNamespace := "default"
-// 	traceflowName := "my-traceflow"
-// 	role := "view"
-// 	traceflow := &corev1.Traceflow{
-// 		ObjectMeta: metav1.ObjectMeta{
-// 			Namespace: traceflowNamespace,
-// 			Name:      traceflowName,
-// 		},
-// 		Data: map[string][]byte{
-// 			"kubeconfig": []byte("TOP TRACEFLOW STUFF"),
-// 		},
-// 	}
-// 	testData := setUp(t, traceflow)
-// 	handler := testData.handler
-// 	requestID, err := handler.EnqueueRequest(&Request{
-// 		Namespace: traceflowNamespace,
-// 		Name:      traceflowName,
-// 		Role:      role,
-// 	})
-// 	require.NoError(t, err)
-// 	var requestStatus *RequestStatus
-// 	err = wait.Poll(100*time.Millisecond, 1*time.Second, func() (bool, error) {
-// 		var err error
-// 		requestStatus, err = handler.GetRequestStatus(requestID)
-// 		if err != nil {
-// 			return false, err
-// 		}
-// 		return requestStatus.Done, nil
-// 	})
-// 	require.NoError(t, err)
-// 	require.NoError(t, requestStatus.Err)
-// 	traceflowID := requestStatus.TraceflowID
-// 	require.NotEmpty(t, traceflowID)
-// 	connectionTraceflow, err := handler.GetTraceflow(traceflowID)
-// 	require.NoError(t, err)
-// 	assert.Equal(t, role, connectionTraceflow.Role)
-// 	assert.Equal(t, traceflow.Data["kubeconfig"], connectionTraceflow.Data)
-// }
+			requestID, err := h.CreateRequest(ctx, request)
+			tfName := requestID
+			require.NoError(t, err)
+
+			// TF status not updated yet, hence request not ready
+			status, err := h.GetRequestStatus(ctx, requestID)
+			require.NoError(t, err)
+			assert.False(t, status.Done)
+			assert.NoError(t, status.Err)
+
+			traceflow, err := k8sClient.Resource(traceflowGVR).Get(ctx, tfName, metav1.GetOptions{})
+			require.NoError(t, err)
+			traceflow.Object["status"] = map[string]interface{}{
+				"phase": tc.phase,
+			}
+			_, err = k8sClient.Resource(traceflowGVR).Update(ctx, traceflow, metav1.UpdateOptions{})
+			require.NoError(t, err)
+
+			status, err = h.GetRequestStatus(ctx, requestID)
+			require.NoError(t, err)
+			assert.True(t, status.Done)
+			assert.NoError(t, status.Err)
+
+			tf, err := h.GetRequestResult(ctx, requestID)
+			require.NoError(t, err)
+			phase, ok, err := unstructured.NestedString(tf, "status", "phase")
+			require.NoError(t, err)
+			assert.True(t, ok)
+			assert.Equal(t, tc.phase, phase)
+			name, ok, err := unstructured.NestedString(tf, "metadata", "name")
+			require.NoError(t, err)
+			assert.True(t, ok)
+			assert.Equal(t, tfName, name)
+		})
+	}
+}
+
+func TestRequestsHandlerGC(t *testing.T) {
+	ctx := context.Background()
+	now := time.Now()
+	clock := clocktesting.NewFakeClock(now)
+	h, k8sClient := setup(t, clock)
+	k8sClient.PrependReactor("create", "traceflows", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		tf := action.(k8stesting.CreateAction).GetObject().(*unstructured.Unstructured)
+		tf.SetCreationTimestamp(metav1.NewTime(clock.Now()))
+		return false, tf, nil
+	})
+	stopCh := make(chan struct{})
+	defer close(stopCh)
+	go h.Run(stopCh)
+
+	request := &Request{
+		Object: getTraceflow(),
+	}
+
+	requestID, err := h.CreateRequest(ctx, request)
+	tfName := requestID
+	require.NoError(t, err)
+
+	_, err = k8sClient.Resource(traceflowGVR).Get(ctx, tfName, metav1.GetOptions{})
+	require.NoError(t, err)
+
+	clock.SetTime(now.Add(traceflowExpiryTimeout - 1*time.Minute))
+	assert.Never(t, func() bool {
+		_, err := k8sClient.Resource(traceflowGVR).Get(ctx, tfName, metav1.GetOptions{})
+		return err != nil
+	}, 1*time.Second, 100*time.Millisecond)
+
+	clock.SetTime(now.Add(traceflowExpiryTimeout + 1*time.Minute))
+	assert.Eventually(t, func() bool {
+		_, err := k8sClient.Resource(traceflowGVR).Get(ctx, tfName, metav1.GetOptions{})
+		return err != nil
+	}, 1*time.Second, 100*time.Millisecond, "Traceflow should be deleted by GC")
+}
