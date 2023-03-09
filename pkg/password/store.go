@@ -4,8 +4,9 @@ import (
 	"context"
 	"crypto/rand"
 	"fmt"
-	"golang.org/x/exp/slices"
 	"sync"
+
+	"golang.org/x/exp/slices"
 
 	"antrea.io/antrea-ui/pkg/password/hasher"
 	"antrea.io/antrea-ui/pkg/password/readwriter"

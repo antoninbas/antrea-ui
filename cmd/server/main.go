@@ -68,8 +68,9 @@ func run() error {
 	s.AddRoutes(router)
 
 	srv := &http.Server{
-		Addr:    serverAddr,
-		Handler: router,
+		Addr:              serverAddr,
+		Handler:           router,
+		ReadHeaderTimeout: 5 * time.Second,
 	}
 
 	stopCh := signals.RegisterSignalHandlers()

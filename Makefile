@@ -1,6 +1,9 @@
 GO                 ?= go
 BINDIR := $(CURDIR)/bin
 GOMOCK_VERSION := v1.6.0
+GOLANGCI_LINT_VERSION := v1.51.2
+GOLANGCI_LINT_BINDIR  := .golangci-bin
+GOLANGCI_LINT_BIN     := $(GOLANGCI_LINT_BINDIR)/$(GOLANGCI_LINT_VERSION)/golangci-lint
 
 all: build
 
@@ -13,20 +16,20 @@ test:
 	$(GO) test -v ./...
 
 # code linting
-.golangci-bin:
+$(GOLANGCI_LINT_BIN):
 	@echo "===> Installing Golangci-lint <==="
-	@curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $@ v1.48.0
+	@rm -rf $(GOLANGCI_LINT_BINDIR)/* # delete old versions
+	@curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(GOLANGCI_LINT_BINDIR)/$(GOLANGCI_LINT_VERSION) $(GOLANGCI_LINT_VERSION)
 
 .PHONY: golangci
-golangci: .golangci-bin
+golangci: $(GOLANGCI_LINT_BIN)
 	@echo "===> Running golangci <==="
-	@GOOS=linux .golangci-bin/golangci-lint run -c .golangci.yml
+	@GOOS=linux $(GOLANGCI_LINT_BIN) run -c .golangci.yml
 
 .PHONY: golangci-fix
-golangci-fix: .golangci-bin
+golangci-fix: $(GOLANGCI_LINT_BIN)
 	@echo "===> Running golangci-fix <==="
-	@GOOS=linux .golangci-bin/golangci-lint run -c .golangci.yml --fix
-
+	@GOOS=linux $(GOLANGCI_LINT_BIN) run -c .golangci.yml --fix
 
 .mockgen-bin:
 	@echo "===> Installing Mockgen <==="
@@ -41,7 +44,7 @@ generate: .mockgen-bin
 .PHONY: clean
 clean:
 	rm -rf bin
-	rm -rf .golangci-bin
+	rm -rf $(GOLANGCI_LINT_BINDIR)
 	rm -rf .mockgen-bin
 
 .PHONY: build
