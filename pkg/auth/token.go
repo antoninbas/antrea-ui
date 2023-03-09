@@ -18,20 +18,6 @@ const (
 	refreshTokenGCPeriod = 1 * time.Minute
 )
 
-type Token struct {
-	Raw       string
-	ExpiresIn time.Duration
-	ExpiresAt time.Time
-}
-
-type TokenManager interface {
-	GetToken() (*Token, error)
-	VerifyToken(rawToken string) error
-	GetRefreshToken() (*Token, error)
-	VerifyRefreshToken(rawToken string) error
-	DeleteRefreshToken(rawToken string)
-}
-
 type tokenManager struct {
 	SigningKeyID       string
 	SigningKey         *rsa.PrivateKey

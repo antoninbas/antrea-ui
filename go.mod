@@ -12,6 +12,7 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/spf13/afero v1.9.5
 	github.com/stretchr/testify v1.8.1
+	github.com/tidwall/gjson v1.14.4
 	go.uber.org/zap v1.24.0
 	golang.org/x/crypto v0.0.0-20220722155217-630584e8d5aa
 	golang.org/x/exp v0.0.0-20230224173230-c95f2b4c22f2
@@ -42,6 +43,8 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
+	github.com/tidwall/match v1.1.1 // indirect
+	github.com/tidwall/pretty v1.2.0 // indirect
 	github.com/ugorji/go/codec v1.2.7 // indirect
 	go.uber.org/atomic v1.7.0 // indirect
 	go.uber.org/goleak v1.2.0 // indirect

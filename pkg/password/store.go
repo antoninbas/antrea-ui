@@ -21,11 +21,6 @@ var (
 	InvalidPasswordErr = fmt.Errorf("invalid password")
 )
 
-type Store interface {
-	Update(ctx context.Context, password []byte) error
-	Compare(ctx context.Context, password []byte) error
-}
-
 type store struct {
 	sync.RWMutex
 	cachedSalt []byte

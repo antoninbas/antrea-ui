@@ -64,6 +64,7 @@ func (s *server) GetTraceflowRequestStatus(c *gin.Context) {
 		c.Header("Access-Control-Expose-Headers", "Location, Retry-After")
 		c.Header("Location", fmt.Sprintf("/api/v1/traceflow/%s/status", requestID))
 		c.Header("Retry-After", "1") // 1 second
+		// this may not be the best status code for this case
 		c.Status(http.StatusAccepted)
 		return
 	}
