@@ -1,6 +1,9 @@
 GO                 ?= go
 BINDIR := $(CURDIR)/bin
+# version should match github.com/golang/mock version in go.mod
 GOMOCK_VERSION := v1.6.0
+GOMOCK_BINDIR  := .mockgen-bin
+GOMOCK_BIN     := $(GOMOCK_BINDIR)/$(GOMOCK_VERSION)/mockgen
 GOLANGCI_LINT_VERSION := v1.51.2
 GOLANGCI_LINT_BINDIR  := .golangci-bin
 GOLANGCI_LINT_BIN     := $(GOLANGCI_LINT_BINDIR)/$(GOLANGCI_LINT_VERSION)/golangci-lint
@@ -31,21 +34,22 @@ golangci-fix: $(GOLANGCI_LINT_BIN)
 	@echo "===> Running golangci-fix <==="
 	@GOOS=linux $(GOLANGCI_LINT_BIN) run -c .golangci.yml --fix
 
-.mockgen-bin:
-	@echo "===> Installing Mockgen <==="
-	GOBIN=$(CURDIR)/$@ $(GO) install github.com/golang/mock/mockgen@$(GOMOCK_VERSION)
-
+# mocks
+$(GOMOCK_BIN):
+	@echo "===> Installing mockgen <==="
+	@rm -rf $(GOMOCK_BINDIR)/* # delete old versions
+	GOBIN=$(CURDIR)/$(GOMOCK_BINDIR)/$(GOMOCK_VERSION) $(GO) install github.com/golang/mock/mockgen@$(GOMOCK_VERSION)
 
 .PHONY: generate
-generate: .mockgen-bin
-	PATH=$(CURDIR)/.mockgen-bin:$$PATH $(GO) generate antrea.io/antrea-ui/...
+generate: $(GOMOCK_BIN)
+	PATH=$(CURDIR)/$(GOMOCK_BINDIR)/$(GOMOCK_VERSION):$$PATH $(GO) generate antrea.io/antrea-ui/...
 
 
 .PHONY: clean
 clean:
 	rm -rf bin
 	rm -rf $(GOLANGCI_LINT_BINDIR)
-	rm -rf .mockgen-bin
+	rm -rf $(GOMOCK_BINDIR)
 
 .PHONY: build
 build:
