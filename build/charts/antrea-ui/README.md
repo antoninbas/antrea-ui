@@ -27,14 +27,24 @@ Kubernetes: `>= 1.16.0-0`
 | frontend.image | object | `{"pullPolicy":"IfNotPresent","repository":"antrea/antrea-ui-frontend","tag":""}` | Container image to use for the Antrea UI frontend. |
 | frontend.port | int | `3000` | Container port on which the frontend will listen. |
 | frontend.resources | object | `{}` | Resource requests and limits for the frontend container. |
-| https | object | `{"auto":{"commonName":"localhost","daysValid":365,"dnsNames":[],"ipAddresses":[]},"enabled":false,"method":"auto"}` | HTTPS configuration for the Antrea UI. |
+| https | object | `{"auto":{"commonName":"localhost","daysValid":365,"dnsNames":[],"ipAddresses":[]},"enabled":false,"method":"auto","user":{"cert":"","key":""},"userCA":{"cert":"","commonName":"localhost","daysValid":365,"dnsNames":[],"ipAddresses":[],"key":""}}` | HTTPS configuration for the Antrea UI. |
 | https.auto | object | `{"commonName":"localhost","daysValid":365,"dnsNames":[],"ipAddresses":[]}` | Configure automatic TLS certificate generation with Helm. |
 | https.auto.commonName | string | `"localhost"` | Common name to use in the certificate. |
 | https.auto.daysValid | int | `365` | Number of days for which the certificate will be valid. There is no automatic rotation with this method. |
 | https.auto.dnsNames | list | `[]` | DNS names to use in the certificate. |
 | https.auto.ipAddresses | list | `[]` | IP addresses to use in the certificate. |
 | https.enabled | bool | `false` | Enable HTTPS (only) for accessing the web UI. |
-| https.method | string | `"auto"` | Method for generating the TLS certificate for the web server. At the moment, only "auto" is supported, which means that Helm will generate a new self-signed certificate every time the template function is executed. |
+| https.method | string | `"auto"` | Method for generating the TLS certificate for the web server. We support "auto", "user", and "userCA". With "auto", Helm will generate a new self-signed certificate every time the template function is executed. With "user", the user is responsible for providing a certificate and key, which will be used directly. With "userCA", the user is responsible for providing a CA certificate and key, which will be used to generate a signed certificate to be used by the web server. |
+| https.user | object | `{"cert":"","key":""}` | Use the provided TLS certificate and key. |
+| https.user.cert | string | `""` | Certificate (base64-encoded PEM format) |
+| https.user.key | string | `""` | Private key (base64-encoded PEM format) |
+| https.userCA | object | `{"cert":"","commonName":"localhost","daysValid":365,"dnsNames":[],"ipAddresses":[],"key":""}` | Use the provided CA certificate and key to generate a signed certificate. |
+| https.userCA.cert | string | `""` | CA certificate (base64-encoded PEM format) |
+| https.userCA.commonName | string | `"localhost"` | Common name to use in the certificate. |
+| https.userCA.daysValid | int | `365` | Number of days for which the certificate will be valid. There is no automatic rotation with this method. |
+| https.userCA.dnsNames | list | `[]` | DNS names to use in the certificate. |
+| https.userCA.ipAddresses | list | `[]` | IP addresses to use in the certificate. |
+| https.userCA.key | string | `""` | CA private key (base64-encoded PEM format) |
 | ipv6 | object | `{"enabled":true}` | IPv6 configuration for the Antrea UI. |
 | ipv6.enabled | bool | `true` | Enable IPv6 for accessing the web UI. Even if the cluster does not support IPv6, you do not typically need to set this value to false. |
 | nodeSelector | object | `{"kubernetes.io/os":"linux"}` | Node selector for the Antrea UI Pod. |

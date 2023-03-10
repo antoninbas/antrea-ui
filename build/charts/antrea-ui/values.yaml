@@ -26,9 +26,12 @@ backend:
 https:
   # -- Enable HTTPS (only) for accessing the web UI.
   enabled: false
-  # -- Method for generating the TLS certificate for the web server. At the moment, only "auto" is
-  # supported, which means that Helm will generate a new self-signed certificate every time the
-  # template function is executed.
+  # -- Method for generating the TLS certificate for the web server. We support "auto", "user", and
+  # "userCA". With "auto", Helm will generate a new self-signed certificate every time the template
+  # function is executed. With "user", the user is responsible for providing a certificate and key,
+  # which will be used directly. With "userCA", the user is responsible for providing a CA
+  # certificate and key, which will be used to generate a signed certificate to be used by the web
+  # server.
   method: "auto"
   # -- Configure automatic TLS certificate generation with Helm.
   auto:
@@ -41,6 +44,28 @@ https:
     # -- Number of days for which the certificate will be valid. There is no automatic rotation with
     # this method.
     daysValid: 365
+  # -- Use the provided TLS certificate and key.
+  user:
+    # -- Certificate (base64-encoded PEM format)
+    cert: ""
+    # -- Private key (base64-encoded PEM format)
+    key: ""
+  # -- Use the provided CA certificate and key to generate a signed certificate.
+  userCA:
+    # -- CA certificate (base64-encoded PEM format)
+    cert: ""
+    # -- CA private key (base64-encoded PEM format)
+    key: ""
+    # -- Common name to use in the certificate.
+    commonName: "localhost"
+    # -- IP addresses to use in the certificate.
+    ipAddresses: []
+    # -- DNS names to use in the certificate.
+    dnsNames: []
+    # -- Number of days for which the certificate will be valid. There is no automatic rotation with
+    # this method.
+    daysValid: 365
+  # TODO: cert-manager
 
 # -- IPv6 configuration for the Antrea UI.
 ipv6:
