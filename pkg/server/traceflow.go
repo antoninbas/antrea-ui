@@ -129,7 +129,9 @@ func (s *server) DeleteTraceflowRequestResult(c *gin.Context) {
 func (s *server) AddTraceflowRoutes(r *gin.RouterGroup) {
 	r = r.Group("/traceflow")
 	r.Use(s.checkBearerToken)
-	r.POST("", s.CreateTraceflowRequest)
+	// Because this API supports creating resources in the cluster, we
+	// rate-limit it to 100 requests per hour out of caution.
+	r.POST("", s.CreateTraceflowRequest).Use(rateLimiter(100, 10))
 	r.GET("/:requestId/status", s.GetTraceflowRequestStatus)
 	r.GET("/:requestId/result", s.GetTraceflowRequestResult)
 	r.DELETE("/:requestId/result", s.DeleteTraceflowRequestResult)

@@ -20,6 +20,7 @@ import (
 const (
 	traceflowExpiryTimeout = 60 * time.Minute
 	gcPeriod               = 1 * time.Minute
+	requestsPerHour        = 100
 )
 
 var (
