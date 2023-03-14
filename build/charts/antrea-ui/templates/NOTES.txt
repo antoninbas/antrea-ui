@@ -5,7 +5,7 @@ You are using version {{ .Chart.Version }}
 
 {{- $port := 3000 -}}
 {{- $scheme := "http" -}}
-{{- if .Values.https.enabled }}
+{{- if .Values.https.enable }}
 {{- $scheme = "https" }}
 {{- end }}
 
@@ -16,7 +16,7 @@ that port locally with your browser:
 
 After running the command above, access "{{ $scheme }}://localhost:{{ $port }}" in your browser.
 
-{{- if and .Values.https.enabled (eq .Values.https.method "auto") }}
+{{- if and .Values.https.enable (eq .Values.https.method "auto") }}
 
 HTTPS is enabled to access the UI and a self-signed certificate was
 automatically generated. You can access the certificate with the following

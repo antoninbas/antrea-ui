@@ -5,6 +5,13 @@ metadata:
   namespace: {{ .Release.Namespace }}
   labels:
     app: antrea-ui
+    {{- with .Values.service.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  annotations:
+    {{- with .Values.service.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
 spec:
   type: {{ .Values.service.type }}
   ports:
@@ -12,7 +19,7 @@ spec:
       targetPort: http
       protocol: TCP
       name: http
-      {{- if and (eq "NodePort" .Values.service.type) .Values.service.nodePort }}
+      {{- if and (has .Values.service.type (list "NodePort" "LoadBalancer")) .Values.service.nodePort }}
       nodePort: {{ .Values.service.nodePort }}
       {{- end }}
   selector:

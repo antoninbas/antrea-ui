@@ -74,7 +74,7 @@ certificate will be re-generated every time the Helm template function runs.
 ```bash
 cat <<EOF >> values-auto.yml
 https:
-  enabled: true
+  enable: true
   method: "auto"
 EOF
 
@@ -93,7 +93,7 @@ can use to generate a new signed certificate.
 ```bash
 cat <<EOF >> values-user.yml
 https:
-  enabled: true
+  enable: true
   method: "user"
   user:
     cert: "<base64-encoded PEM certificate>"
@@ -113,7 +113,7 @@ key. Helm will generate a signed certificate using the provided data.
 ```bash
 cat <<EOF >> values-userCA.yml
 https:
-  enabled: true
+  enable: true
   method: "userCA"
   userCA:
     cert: "<base64-encoded PEM CA certificate>"

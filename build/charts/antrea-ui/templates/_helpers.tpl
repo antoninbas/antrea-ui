@@ -27,7 +27,7 @@
 {{- end -}}
 
 {{- define "validateValues" -}}
-{{- if .Values.https.enabled -}}
+{{- if .Values.https.enable -}}
 {{- if not ( has .Values.https.method ( list "auto" "user" "userCA" ) ) -}}
 {{- fail "https.method is not valid" -}}
 {{- end -}}
