@@ -10,6 +10,8 @@ GOLANGCI_LINT_BIN     := $(GOLANGCI_LINT_BINDIR)/$(GOLANGCI_LINT_VERSION)/golang
 
 all: build
 
+include versioning.mk
+
 .PHONY: bin
 bin:
 	GOBIN=$(BINDIR) $(GO) install antrea.io/antrea-ui/...
@@ -51,7 +53,15 @@ clean:
 	rm -rf $(GOLANGCI_LINT_BINDIR)
 	rm -rf $(GOMOCK_BINDIR)
 
+.PHONY: build-frontend
+build-frontend:
+	docker build -t antrea/antrea-ui-frontend:$(DOCKER_IMG_VERSION) -f build/Dockerfile.frontend .
+	docker tag antrea/antrea-ui-frontend:$(DOCKER_IMG_VERSION) antrea/antrea-ui-frontend
+
+.PHONY: build-backend
+build-backend:
+	docker build -t antrea/antrea-ui-backend:$(DOCKER_IMG_VERSION) -f build/Dockerfile.backend .
+	docker tag antrea/antrea-ui-backend:$(DOCKER_IMG_VERSION) antrea/antrea-ui-backend
+
 .PHONY: build
-build:
-	docker build -t antrea/antrea-ui-frontend -f build/Dockerfile.frontend .
-	docker build -t antrea/antrea-ui-backend -f build/Dockerfile.backend .
+build: build-frontend build-backend
