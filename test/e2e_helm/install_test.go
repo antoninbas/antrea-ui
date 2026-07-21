@@ -152,6 +152,19 @@ stringData:
 			defer tunnel.Close()
 			tunnel.ForwardPort(t)
 
+			// DEBUG: dump pod state before helm.Delete/tunnel.Close run, to
+			// investigate https-auto connection-refused flakiness.
+			defer func() {
+				if !t.Failed() {
+					return
+				}
+				t.Logf("DEBUG: dumping pod state for release %s", releaseName)
+				k8s.RunKubectl(t, kubectlOptions, "get", "pods", "-o", "wide")
+				k8s.RunKubectl(t, kubectlOptions, "describe", "pods", "-l", "app=antrea-ui")
+				k8s.RunKubectl(t, kubectlOptions, "logs", "-l", "app=antrea-ui", "-c", "frontend", "--prefix", "--timestamps")
+				k8s.RunKubectl(t, kubectlOptions, "logs", "-l", "app=antrea-ui", "-c", "backend", "--prefix", "--timestamps")
+			}()
+
 			tc.checks(t, tunnel.Endpoint())
 		})
 	}
