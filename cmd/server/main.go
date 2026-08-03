@@ -16,7 +16,6 @@ package main
 
 import (
 	"context"
-	"crypto/rsa"
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
@@ -35,7 +34,7 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
-	"antrea.io/antrea-ui/pkg/auth"
+	"antrea.io/antrea-ui/pkg/auth/session"
 	serverconfig "antrea.io/antrea-ui/pkg/config/server"
 	"antrea.io/antrea-ui/pkg/env"
 	antreasvchandler "antrea.io/antrea-ui/pkg/handlers/antreasvc"
@@ -115,18 +114,26 @@ func run() error {
 	if err != nil {
 		return fmt.Errorf("failed to parse K8s server URL '%s': %w", k8sRESTConfig.Host, err)
 	}
-	// K8s API calls made on behalf of the UI user (as opposed to antrea-ui's own operations,
-	// e.g. reading the antrea-ui-passwd Secret) are impersonated as the antrea-ui-admin
-	// ServiceAccount, so that plugins can be granted extra permissions for these calls without
-	// exposing antrea-ui's own sensitive access.
+	// Sessions created with the static admin password have no Kubernetes identity of their
+	// own, so their K8s API calls are impersonated as the antrea-ui-admin ServiceAccount. This
+	// is also what the Traceflow GC loop uses, since it runs with no user request in flight.
 	antreaUIAdminUser := k8s.ServiceAccountUserName(env.GetNamespace(), antreaUIAdminSAName)
-	k8sAdminHTTPClient, k8sAdminDynamicClient, err := k8s.ImpersonatedClient(k8sRESTConfig, k8sHTTPClient.Transport, antreaUIAdminUser)
+	_, k8sAdminDynamicClient, err := k8s.ImpersonatedClient(k8sRESTConfig, k8sHTTPClient.Transport, antreaUIAdminUser)
 	if err != nil {
 		return fmt.Errorf("failed to create impersonated K8s clients for antrea-ui-admin: %w", err)
 	}
 
+	// clientFactory turns the credential resolved for a request into a K8s client that acts as
+	// that user.
+	clientFactory, err := k8s.NewClientFactory(k8sRESTConfig, k8sHTTPClient.Transport, session.TransportKeyK8s)
+	if err != nil {
+		return fmt.Errorf("failed to create K8s client factory: %w", err)
+	}
+
 	traceflowHandler := traceflowhandler.NewRequestsHandler(logger, k8sAdminDynamicClient)
-	k8sProxyHandler := k8sproxy.NewK8sProxyHandler(logger, k8sServerURL, k8sAdminHTTPClient.Transport)
+	k8sProxyHandler := k8sproxy.NewK8sProxyHandler(logger, k8sServerURL, func(req *http.Request) (http.RoundTripper, error) {
+		return clientFactory.TransportForRequest(req.Context())
+	})
 
 	k8sClientset, err := kubernetes.NewForConfig(k8sRESTConfig)
 	if err != nil {
@@ -138,7 +145,7 @@ func run() error {
 	}
 	pluginRegistry := pluginregistry.NewRegistry(logger, k8sClientset, pluginsNamespace, config.Plugins.LabelSelector)
 
-	antreaSvcHandler, err := antreasvchandler.NewRequestsHandler(logger, k8sRESTConfig, config.AntreaNamespace, antreaUIAdminUser)
+	antreaSvcHandler, err := antreasvchandler.NewRequestsHandler(logger, k8sRESTConfig, config.AntreaNamespace)
 	if err != nil {
 		return fmt.Errorf("failed to create handler for Antrea Service requests: %w", err)
 	}
@@ -152,20 +159,17 @@ func run() error {
 		passwordStore = store
 	}
 
-	var jwtKey *rsa.PrivateKey
-	if config.Auth.JWTKeyPath != "" {
-		var err error
-		if jwtKey, err = auth.LoadPrivateKeyFromFile(config.Auth.JWTKeyPath); err != nil {
-			return fmt.Errorf("failed to load JWT key from file: %w", err)
-		}
-	} else {
-		logger.Info("Generating RSA key for JWT")
-		var err error
-		if jwtKey, err = auth.GeneratePrivateKey(); err != nil {
-			return fmt.Errorf("failed to generate JWT key: %w", err)
-		}
-	}
-	tokenManager := auth.NewTokenManager("jwt-key", jwtKey)
+	// The session store is memory-only by design: it holds users' Kubernetes credentials, which
+	// are never written to a Secret, a ConfigMap, or a volume. A restart logs everyone out, and
+	// the deployment is single-replica for the same reason.
+	sessionStore := session.NewStore(logger, session.Options{
+		IdleTimeout: config.Auth.Session.IdleTimeout,
+		MaxLifetime: config.Auth.Session.MaxLifetime,
+		MaxSessions: config.Auth.Session.MaxSessions,
+		// Bounds how much of MaxSessions one identity can hold, so a single user scripting
+		// logins cannot fill the store and lock everyone else out.
+		MaxSessionsPerUser: config.Auth.Session.MaxSessionsPerUser,
+	})
 
 	var oidcProvider *server.OIDCProvider
 	if config.Auth.OIDC.Enabled {
@@ -179,6 +183,7 @@ func run() error {
 				config.Auth.OIDC.ClientID,
 				config.Auth.OIDC.ClientSecret,
 				config.Auth.OIDC.LogoutURL,
+				config.Auth.OIDC.Scopes,
 			)
 			if err != nil {
 				return nil, err
@@ -234,18 +239,23 @@ func run() error {
 		flowStreamSubscriber = grpcSubscriber
 	}
 
-	s := server.NewServer(
-		logger,
-		traceflowHandler,
-		k8sProxyHandler,
-		antreaSvcHandler,
-		flowStreamSubscriber,
-		passwordStore,
-		tokenManager,
-		oidcProvider,
-		pluginRegistry,
-		config,
-	)
+	s, err := server.NewServer(server.Options{
+		Logger:                   logger,
+		Config:                   config,
+		TraceflowRequestsHandler: traceflowHandler,
+		K8sProxyHandler:          k8sProxyHandler,
+		AntreaSvcRequestsHandler: antreaSvcHandler,
+		FlowStreamSubscriber:     flowStreamSubscriber,
+		PasswordStore:            passwordStore,
+		SessionStore:             sessionStore,
+		ClientFactory:            clientFactory,
+		OIDCProvider:             oidcProvider,
+		PluginRegistry:           pluginRegistry,
+		AdminUserName:            antreaUIAdminUser,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to create server: %w", err)
+	}
 
 	var router *gin.Engine
 	if env.IsDevelopmentEnv() {
@@ -274,7 +284,7 @@ func run() error {
 
 	go traceflowHandler.Run(stopCh)
 	go antreaSvcHandler.Run(stopCh)
-	go tokenManager.Run(stopCh)
+	go sessionStore.Run(stopCh)
 	go pluginRegistry.Run(stopCh)
 
 	// Initializing the server in a goroutine so that
